@@ -2545,5 +2545,51 @@ function openDetail(id) { openDetailPanel(id); }
   <div class="detail-body" id="dp-body"></div>
 </div>
 
+<script>
+const SHEET_URL = 'https://script.google.com/a/macros/bigleaguewashes.com/s/AKfycbwqog-pJDF9C0nrnvClWPfhtZZBIi-m_ONaZoYKtHtiMogGG5LQeunA6Wf1-N4Vum3h/exec';
+
+// Function to save data
+async function saveData(data) {
+  try {
+    const response = await fetch(SHEET_URL, {
+      method: 'POST',
+      body: JSON.stringify(data),
+      headers: { 'Content-Type': 'application/json' }
+    });
+    const result = await response.json();
+    if (result.success) {
+      console.log('Data saved successfully!');
+      // Optionally refresh data
+    } else {
+      console.error('Error saving data:', result.error);
+    }
+  } catch (error) {
+    console.error('Error:', error.message);
+  }
+}
+
+// Function to load data
+async function loadData() {
+  try {
+    const response = await fetch(SHEET_URL);
+    const data = await response.json();
+    console.log('Loaded data:', data);
+    // Process and display data as needed
+  } catch (error) {
+    console.error('Error loading data:', error);
+  }
+}
+
+// Example: Call saveData when submitting a form
+// document.getElementById('some-form').addEventListener('submit', (e) => {
+//   e.preventDefault();
+//   const data = { user: 'example', quote: 'details' };
+//   saveData(data);
+// });
+
+// Load data on page load
+window.addEventListener('load', loadData);
+</script>
+
 </body>
 </html>
