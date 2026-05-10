@@ -2546,49 +2546,140 @@ function openDetail(id) { openDetailPanel(id); }
 </div>
 
 <script>
+// ──────────────────────────────────────────────────────────────────────────────
+// GOOGLE SHEET INTEGRATION
+// ──────────────────────────────────────────────────────────────────────────────
 const SHEET_URL = 'https://script.google.com/a/macros/bigleaguewashes.com/s/AKfycbwqog-pJDF9C0nrnvClWPfhtZZBIi-m_ONaZoYKtHtiMogGG5LQeunA6Wf1-N4Vum3h/exec';
 
-// Function to save data
-async function saveData(data) {
+/**
+ * Fetch quotes data from the Google Sheet via the Apps Script web app
+ * @param {string} tabName - The tab name in the Google Sheet (defaults to "All Quotes")
+ * @returns {Promise<Array>} Array of quote objects from the sheet
+ */
+async function fetchQuotesFromSheet(tabName = 'All Quotes') {
   try {
-    const response = await fetch(SHEET_URL, {
-      method: 'POST',
-      body: JSON.stringify(data),
-      headers: { 'Content-Type': 'application/json' }
-    });
-    const result = await response.json();
-    if (result.success) {
-      console.log('Data saved successfully!');
-      // Optionally refresh data
+    const url = new URL(SHEET_URL);
+    url.searchParams.append('tab', tabName);
+    
+    const response = await fetch(url.toString());
+    if (!response.ok) {
+      throw new Error('Failed to fetch data from Google Sheet: ' + response.statusText);
+    }
+    
+    const data = await response.json();
+    
+    if (data.error) {
+      console.error('Sheet API error:', data.error);
+      return [];
+    }
+    
+    console.log('Fetched data from Google Sheet:', data);
+    return Array.isArray(data) ? data : [];
+  } catch (error) {
+    console.error('Error fetching data from Google Sheet:', error);
+    // Fall back to localStorage if sheet fetch fails
+    return [];
+  }
+}
+
+/**
+ * Transform sheet data into the internal quote structure
+ * @param {Array} sheetData - Raw data from the Google Sheet
+ * @returns {Array} Array of quote objects matching the app's data structure
+ */
+function transformSheetData(sheetData) {
+  return sheetData.map(function(row) {
+    // Parse JSON fields if they're stored as strings
+    var svcs = [];
+    try {
+      if (row.services) {
+        svcs = typeof row.services === 'string' ? JSON.parse(row.services) : row.services;
+      }
+    } catch (e) {
+      svcs = [];
+    }
+    
+    var expenses = {};
+    try {
+      if (row.expenses) {
+        expenses = typeof row.expenses === 'string' ? JSON.parse(row.expenses) : row.expenses;
+      }
+    } catch (e) {
+      expenses = {};
+    }
+    
+    return {
+      id: row.id || Date.now().toString(),
+      qnum: row.qnum || '',
+      date: row.date || new Date().toISOString().split('T')[0],
+      first: row.first || '',
+      last: row.last || '',
+      addr: row.addr || '',
+      phone: row.phone || '',
+      email: row.email || '',
+      notes: row.notes || '',
+      svcs: svcs,
+      total: parseFloat(row.total || 0),
+      expTotal: parseFloat(row.expTotal || 0),
+      profit: parseFloat(row.profit || 0),
+      status: row.status || 'pending',
+      completed: row.completed === 'TRUE' || row.completed === true,
+      completedDate: row.completedDate || '',
+      paid: row.paid === 'TRUE' || row.paid === true,
+      paidDate: row.paidDate || '',
+      paymentMethod: row.paymentMethod || '',
+      paymentNote: row.paymentNote || '',
+      scheduledDate: row.scheduledDate || '',
+      scheduledTime: row.scheduledTime || '',
+      expenses: expenses
+    };
+  });
+}
+
+/**
+ * Initialize app data from Google Sheet with localStorage fallback
+ */
+async function initializeAppData() {
+  try {
+    // First, try to load from Google Sheet
+    const sheetData = await fetchQuotesFromSheet('All Quotes');
+    
+    if (sheetData && sheetData.length > 0) {
+      // Transform sheet data to app format
+      const transformedData = transformSheetData(sheetData);
+      
+      // Update the global quotes array
+      quotes = transformedData;
+      
+      console.log('App initialized with data from Google Sheet. Total quotes:', quotes.length);
+      
+      // Save to localStorage as backup
+      localStorage.setItem('blw-quotes', JSON.stringify(quotes));
+      
+      // Render the app UI with fetched data
+      renderDash();
+      renderQuotes();
+      renderJobs();
+      renderFinance();
+      renderClients();
     } else {
-      console.error('Error saving data:', result.error);
+      // Fall back to localStorage if no data from sheet
+      const localData = JSON.parse(localStorage.getItem('blw-quotes') || '[]');
+      quotes = localData;
+      console.log('No data from Google Sheet, using localStorage. Total quotes:', quotes.length);
+      renderDash();
     }
   } catch (error) {
-    console.error('Error:', error.message);
+    console.error('Error initializing app data:', error);
+    // Fall back to localStorage
+    const localData = JSON.parse(localStorage.getItem('blw-quotes') || '[]');
+    quotes = localData;
+    renderDash();
   }
 }
 
-// Function to load data
-async function loadData() {
-  try {
-    const response = await fetch(SHEET_URL);
-    const data = await response.json();
-    console.log('Loaded data:', data);
-    // Process and display data as needed
-  } catch (error) {
-    console.error('Error loading data:', error);
-  }
-}
-
-// Example: Call saveData when submitting a form
-// document.getElementById('some-form').addEventListener('submit', (e) => {
-//   e.preventDefault();
-//   const data = { user: 'example', quote: 'details' };
-//   saveData(data);
-// });
-
-// Load data on page load
-window.addEventListener('load', loadData);
+// Initialize data when page loads
+window.addEventListener('DOMContentLoaded', initializeAppData);
 </script>
 
 </body>
