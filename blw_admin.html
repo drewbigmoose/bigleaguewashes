@@ -2280,7 +2280,7 @@ function buildEmailHTML(q) {
       '</td><td class="ep-svc-pr">' + fmt(s.price) + '</td></tr>';
   }).join('');
   return '<div class="ep-wrap">' +
-    '<div class="ep-hd"><img src="' + getLogo() + '" class="ep-logo" alt="Big League Washes"><div class="ep-tag">Pressure Washing &middot; Detailing &middot; Junk Removal</div></div>' +
+    '<div class="ep-hd"><img src="' + (getLogo()||'') + '" onerror="this.style.display=\'none\'" class="ep-logo" alt="Big League Washes"><div class="ep-tag">Pressure Washing &middot; Detailing &middot; Junk Removal</div></div>' +
     '<div class="ep-body">' +
     '<div class="ep-greet">Hi ' + (q.first || 'there') + ',</div>' +
     '<div class="ep-intro">Thank you for your interest in Big League Washes! Please find your personalized service quote below. We take pride in delivering professional-grade results at every job.</div>' +
