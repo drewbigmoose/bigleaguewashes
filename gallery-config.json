@@ -1,0 +1,59 @@
+{
+  "galleries": [
+    {
+      "key": "driveways",
+      "label": "Driveways & Patios",
+      "icon": "🧱",
+      "folder": "images/driveways",
+      "images": [
+        { "file": "1.jpg", "caption": "Before" },
+        { "file": "2.jpg", "caption": "After" },
+        { "file": "3.jpg", "caption": "Detail" }
+      ]
+    },
+    {
+      "key": "soft-wash",
+      "label": "Softwash",
+      "icon": "🏠",
+      "folder": "images/soft-wash",
+      "images": [
+        { "file": "1.jpg", "caption": "Before" },
+        { "file": "2.jpg", "caption": "After" },
+        { "file": "3.jpg", "caption": "Detail" }
+      ]
+    },
+    {
+      "key": "pool-decks",
+      "label": "Pool Decks",
+      "icon": "🏊",
+      "folder": "images/pool-decks",
+      "images": [
+        { "file": "1.jpg", "caption": "Before" },
+        { "file": "2.jpg", "caption": "After" },
+        { "file": "3.jpg", "caption": "Detail" }
+      ]
+    },
+    {
+      "key": "car-detailing",
+      "label": "Car Detailing",
+      "icon": "🚗",
+      "folder": "images/car-detailing",
+      "images": [
+        { "file": "1.jpg", "caption": "Before" },
+        { "file": "2.jpg", "caption": "After" },
+        { "file": "3.jpg", "caption": "Detail" }
+      ]
+    },
+    {
+      "key": "junk-removal",
+      "label": "Junk Removal",
+      "icon": "🗑️",
+      "folder": "images/junk-removal",
+      "images": [
+        { "file": "1.jpg", "caption": "Before" },
+        { "file": "2.jpg", "caption": "After" },
+        { "file": "3.jpg", "caption": "Detail" }
+      ]
+    }
+  ]
+}
