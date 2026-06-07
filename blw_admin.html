@@ -522,7 +522,7 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none}
 
   /* Table: horizontal scroll */
   .card { overflow-x: auto; }
-  table { min-width: 500px; }
+  /* table min-width removed */
 
   /* Cards: tighter */
   .card-hd { padding: 11px 14px; }
@@ -785,7 +785,7 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none}
   max-height: 380px;
   overflow-y: auto;
 }
-.export-preview-wrap table { min-width: 600px; }
+.export-preview-wrap /* table min-width removed */
 .export-preview-wrap th {
   background: #f0f4ff;
   color: var(--blue);
@@ -1181,6 +1181,65 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none}
 @keyframes authShake {
   0%,100%{transform:translateX(0)} 20%{transform:translateX(-8px)}
   40%{transform:translateX(8px)} 60%{transform:translateX(-6px)} 80%{transform:translateX(6px)}
+}
+
+
+/* ── MOBILE OVERFLOW & SCROLL FIXES ── */
+html, body {
+  overflow-x: hidden;
+  max-width: 100vw;
+}
+* { box-sizing: border-box; }
+.app { max-width: 100vw; overflow-x: hidden; }
+.content { overflow-x: hidden; }
+
+/* Fix tables on mobile - no forced min-width */
+@media (max-width: 768px) {
+  table { min-width: 0 !important; width: 100%; }
+  .card { overflow-x: auto; }
+  .stats-row { grid-template-columns: 1fr 1fr !important; }
+  .quote-layout { grid-template-columns: 1fr !important; }
+  .finance-layout { grid-template-columns: 1fr !important; }
+  .sched-layout { grid-template-columns: 1fr !important; }
+  .settings-grid { grid-template-columns: 1fr !important; }
+  .export-grid { grid-template-columns: 1fr 1fr !important; }
+  .form-row { grid-template-columns: 1fr !important; }
+  .fin-summary { grid-template-columns: 1fr 1fr !important; }
+  .fin-sub2 { grid-template-columns: 1fr 1fr !important; }
+  /* Prevent any element exceeding viewport */
+  img, video, iframe { max-width: 100%; }
+  /* Fix detail panel topbar on small screens */
+  .detail-topbar { flex-wrap: wrap; height: auto; padding: 8px 12px; gap: 8px; }
+  .detail-topbar-actions { flex-wrap: wrap; gap: 4px; }
+  .detail-topbar-actions .btn { font-size: 12px; padding: 5px 8px; }
+  /* Expense grids on mobile */
+  .exp-row-supply { grid-template-columns: 1fr 44px 60px 50px 22px !important; }
+  .exp-row-worker { grid-template-columns: 1fr 44px 54px 50px 22px !important; }
+  .exp-row-other  { grid-template-columns: 1fr 72px 22px !important; }
+}
+
+
+/* ── MOBILE VIEWPORT & SCROLL FIXES ── */
+html { overflow-x: hidden; }
+body { overflow-x: hidden; max-width: 100vw; }
+.app { overflow-x: hidden; }
+img, video { max-width: 100%; height: auto; }
+@media (max-width: 768px) {
+  table { min-width: 0 !important; font-size: 12px; }
+  th, td { padding: 8px 10px !important; }
+  .card { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .stats-row { grid-template-columns: 1fr 1fr !important; gap: 8px !important; }
+  .quote-layout { grid-template-columns: 1fr !important; }
+  .finance-layout { grid-template-columns: 1fr !important; }
+  .sched-layout { grid-template-columns: 1fr !important; }
+  .settings-grid { grid-template-columns: 1fr !important; }
+  .export-grid { grid-template-columns: 1fr 1fr !important; }
+  .form-row { grid-template-columns: 1fr !important; gap: 0 !important; }
+  .fin-summary { grid-template-columns: 1fr 1fr !important; }
+  .fin-sub2 { grid-template-columns: 1fr 1fr !important; }
+  .detail-topbar { flex-wrap: wrap; height: auto !important; padding: 10px 12px !important; gap: 8px; }
+  .detail-topbar-actions { gap: 4px !important; }
+  .detail-topbar-actions .btn { font-size: 11px !important; padding: 5px 8px !important; }
 }
 
 </style>
@@ -1711,37 +1770,8 @@ input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none}
           </select>
         </div>
       </div>
-      <div class="fg"><div class="fl">Payment note <span>optional</span></div><input type="text" id="track-note" placeholder="Check #1234, tip included..."></div>
-    </div>
-    <div class="modal-ft"><button class="btn btn-ghost" onclick="closeM('modal-track')">Cancel</button><button class="btn btn-primary" onclick="saveTracking()">Save Status</button></div>
-  </div>
-</div>
-
-<!-- detail replaced by detail-panel -->
-    <div class="modal-body" id="detail-body"></div>
-    <div class="modal-ft" id="detail-footer"></div>
-  </div>
-</div>
-
-<!-- CLIENT PICKER -->
-<div class="overlay" id="modal-clients">
-  <div class="modal">
-    <div class="modal-hd"><div><div class="mh-t">Load Client</div><div class="mh-s">Select a saved client to prefill the form</div></div><button class="modal-x" onclick="closeM('modal-clients')">&#x2715;</button></div>
-    <div class="modal-body"><input type="text" id="cp-search" placeholder="Search..." oninput="renderClientPicker()" style="margin-bottom:11px"><div id="cp-list"></div></div>
-  </div>
-</div>
-
-<!-- CLIENT HISTORY -->
-<div class="overlay" id="modal-history">
-  <div class="modal modal-lg">
-    <div class="modal-hd"><div><div class="mh-t" id="hist-title">Client History</div><div class="mh-s" id="hist-sub"></div></div><button class="modal-x" onclick="closeM('modal-history')">&#x2715;</button></div>
-    <div class="modal-body" id="hist-body"></div>
-    <div class="modal-ft"><button class="btn btn-ghost" onclick="closeM('modal-history')">Close</button></div>
-  </div>
-</div>
-
-<div class="toast" id="toast"><span id="t-icon">&#x2713;</span><span id="t-msg">Done</span></div>
-<script>function getLogo(){var el=document.getElementById('blw-logo-data');return el?el.src:'';}
+      <div class="fg"><div class="fl">Payment note <span>optional</span></div><input type="text" id="track-not<script>
+function getLogo(){var el=document.getElementById('blw-logo-data');return el?el.src:'';}
 var LOGO=getLogo;
 
 var TIME_WINDOWS = ['7:00 AM','9:00 AM','11:00 AM','1:00 PM','3:00 PM'];
@@ -4407,7 +4437,235 @@ document.addEventListener('keydown', function(e) {
 });
 
 // Start the app
+
+// ─── MISSING FUNCTIONS (restored) ────────────────────────────────
+
+function saveAndSend() {
+  var svcs = getServices();
+  if (!svcs.length) { showToast('\u26a0', 'Add at least one service'); return; }
+  var q = buildQ();
+  var idx = quotes.findIndex(function(x){ return x.id === q.id; });
+  if (idx >= 0) quotes[idx] = q; else quotes.unshift(q);
+  upsertClient(q); save(); saveQuoteToSupabase(q);
+  _emailData = q; _editId = null;
+  document.getElementById('edit-banner').style.display = 'none';
+  renderQuotes(); renderDash();
+  showSendChoice(q);
+}
+
+function showSendChoice(q) {
+  _emailData = q;
+  var existing = document.getElementById('send-choice-overlay');
+  if (existing) existing.remove();
+  var overlay = document.createElement('div');
+  overlay.id = 'send-choice-overlay';
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(10,22,40,.6);z-index:800;display:flex;align-items:flex-end;justify-content:center;padding:0 16px 24px;backdrop-filter:blur(4px)';
+  overlay.innerHTML =
+    '<div style="background:var(--white);border-radius:20px;width:100%;max-width:440px;padding:22px;box-shadow:0 -8px 40px rgba(0,0,0,.2)">' +
+    '<div style="font-size:16px;font-weight:600;margin-bottom:4px">Send to ' + cName(q) + '</div>' +
+    '<div style="font-size:13px;color:var(--text3);margin-bottom:18px">Quote #' + q.qnum + ' \u00B7 ' + fmt(q.total) + '</div>' +
+    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">' +
+      '<button class="btn btn-primary" style="justify-content:center;padding:14px" onclick="doQuickEmail()">\u2709\uFE0F Email</button>' +
+      '<button class="btn btn-secondary" style="justify-content:center;padding:14px" onclick="doQuickSMS()">\uD83D\uDCAC Text</button>' +
+    '</div>' +
+    '<button class="btn btn-ghost" style="width:100%;justify-content:center;font-size:13px" onclick="closeSendChoice()">Skip for now</button>' +
+    '</div>';
+  overlay.addEventListener('click', function(e){ if(e.target === overlay) closeSendChoice(); });
+  document.body.appendChild(overlay);
+}
+
+function closeSendChoice() {
+  var el = document.getElementById('send-choice-overlay');
+  if (el) el.remove();
+}
+
+function doQuickEmail() {
+  closeSendChoice();
+  var q = _emailData; if (!q) return;
+  var subj = 'Your Quote from Big League Washes \u2014 ' + q.qnum;
+  var body = 'Hi ' + (q.first||'there') + ',\n\nThank you for your interest in Big League Washes!\n\nQuote #: ' + q.qnum +
+    '\nDate: ' + q.date + '\nAddress: ' + (q.addr||'TBD') + '\n\nSERVICES:\n' +
+    q.svcs.map(function(s){ return '  ' + s.name + (s.area>0?' ('+Math.round(s.area)+' sq ft)':'') + ': ' + fmt(s.price); }).join('\n') +
+    '\n\nTOTAL: ' + fmt(q.total) + '\n\n' + (q.notes?'Notes: '+q.notes+'\n\n':'') +
+    'Ready to book? Call or text 404-617-2395\n\nBig League Washes\nbigleaguewashes.com';
+  var idx = quotes.findIndex(function(x){ return x.id===q.id; });
+  if (idx>=0 && quotes[idx].status==='pending') { quotes[idx].status='sent'; save(); }
+  showToast('\u2709\uFE0F','Opening email...');
+  setTimeout(function(){ window.location.href='mailto:'+(q.email||'')+'?subject='+encodeURIComponent(subj)+'&body='+encodeURIComponent(body); },200);
+}
+
+function doQuickSMS() {
+  closeSendChoice();
+  var q = _emailData; if (!q) return;
+  var body = 'Hi ' + (q.first||'there') + "! Here's your quote from Big League Washes:\n\n" +
+    'Quote #: ' + q.qnum + '\nAddress: ' + (q.addr||'') + '\n\n' +
+    q.svcs.map(function(s){ return '\u2022 '+s.name+': '+fmt(s.price); }).join('\n') +
+    '\n\nTOTAL: ' + fmt(q.total) + '\n\nReply to book! \uD83D\uDCA6 \u2014 Big League Washes';
+  var idx = quotes.findIndex(function(x){ return x.id===q.id; });
+  if (idx>=0 && quotes[idx].status==='pending') { quotes[idx].status='sent'; save(); }
+  showToast('\uD83D\uDCAC','Opening Messages...');
+  setTimeout(function(){ window.location.href='sms:'+(q.phone||'').replace(/[^\d+]/g,'')+'?body='+encodeURIComponent(body); },200);
+}
+
+function deleteCurrentEditQuote() {
+  if (!_editId) return;
+  var q = quotes.find(function(x){ return x.id === _editId; });
+  if (!q) return;
+  if (!confirm('Delete quote ' + q.qnum + ' for ' + cName(q) + '?\nThis cannot be undone.')) return;
+  quotes = quotes.filter(function(x){ return x.id !== _editId; });
+  Object.keys(schedules).forEach(function(dk){
+    schedules[dk] = (schedules[dk]||[]).filter(function(s){ return s.quoteId !== _editId; });
+    if (!schedules[dk].length) delete schedules[dk];
+  });
+  save(); deleteQuoteFromSupabase(_editId);
+  _editId = null;
+  document.getElementById('edit-banner').style.display = 'none';
+  showDeleteInPanel(false);
+  showToast('\uD83D\uDDD1','Quote deleted');
+  renderQuotes(); renderDash(); renderJobs();
+  goTo('quotes');
+}
+
+function showDeleteInPanel(show) {
+  var el = document.getElementById('sum-delete-row');
+  if (el) el.style.display = show ? 'block' : 'none';
+}
+
+// ─── SETTINGS / GALLERY MANAGER ──────────────────────────────────
+var _galConfigData = null;
+
+function showSettingsPanel(id) {
+  document.querySelectorAll('.settings-panel').forEach(function(p){ p.classList.remove('sopen'); });
+  document.querySelectorAll('.settings-nav-item').forEach(function(n){ n.classList.remove('sact'); });
+  var panel = document.getElementById('sp-' + id);
+  var nav   = document.getElementById('snav-' + id);
+  if (panel) panel.classList.add('sopen');
+  if (nav)   nav.classList.add('sact');
+  if (id === 'gallery') renderGalEditor();
+  if (id === 'sync') {
+    var sc = document.getElementById('sync-quote-count');
+    if (sc) sc.textContent = quotes.length + ' quotes \u00B7 ' + Object.keys(schedules).length + ' scheduled days';
+  }
+}
+
+function renderSettings() { renderGalEditor(); }
+
+function loadGalConfig() {
+  var saved = localStorage.getItem('blw-gallery-config');
+  if (saved) { try { return JSON.parse(saved); } catch(e){} }
+  return { galleries: [
+    {key:'driveways',    label:'Driveways & Patios', icon:'\uD83E\uDDF1', folder:'images/driveways',     images:[{file:'1.jpg',caption:'Before'},{file:'2.jpg',caption:'After'},{file:'3.jpg',caption:'Detail'}]},
+    {key:'soft-wash',   label:'Softwash',            icon:'\uD83C\uDFE0', folder:'images/soft-wash',    images:[{file:'1.jpg',caption:'Before'},{file:'2.jpg',caption:'After'},{file:'3.jpg',caption:'Detail'}]},
+    {key:'pool-decks',  label:'Pool Decks',           icon:'\uD83C\uDFCA', folder:'images/pool-decks',   images:[{file:'1.jpg',caption:'Before'},{file:'2.jpg',caption:'After'},{file:'3.jpg',caption:'Detail'}]},
+    {key:'car-detailing',label:'Car Detailing',       icon:'\uD83D\uDE97', folder:'images/car-detailing',images:[{file:'1.jpg',caption:'Before'},{file:'2.jpg',caption:'After'},{file:'3.jpg',caption:'Detail'}]},
+    {key:'junk-removal',label:'Junk Removal',         icon:'\uD83D\uDDD1\uFE0F', folder:'images/junk-removal', images:[{file:'1.jpg',caption:'Before'},{file:'2.jpg',caption:'After'},{file:'3.jpg',caption:'Detail'}]}
+  ]};
+}
+
+function renderGalEditor() {
+  _galConfigData = loadGalConfig();
+  var el = document.getElementById('gal-editor');
+  if (!el) return;
+  el.innerHTML = _galConfigData.galleries.map(function(gal, gi) {
+    var imgRows = gal.images.map(function(img, ii) {
+      return '<div class="gal-img-row">' +
+        '<input class="gal-img-in" type="text" value="' + (img.file||'') + '" placeholder="filename.jpg" onchange="updateGalImage(' + gi + ',' + ii + ',\'file\',this.value)">' +
+        '<input class="gal-img-in" type="text" value="' + (img.caption||'') + '" placeholder="Caption" onchange="updateGalImage(' + gi + ',' + ii + ',\'caption\',this.value)">' +
+        '<button class="gal-del-btn" onclick="removeGalImage(' + gi + ',' + ii + ')">&#x2715;</button></div>';
+    }).join('');
+    return '<div class="gal-service-card">' +
+      '<div class="gal-service-hd" onclick="toggleGalCard(' + gi + ')">' +
+        '<div class="gal-service-title"><span>' + (gal.icon||'\uD83D\uDCF7') + '</span>' +
+          '<input type="text" value="' + gal.label + '" style="background:none;border:none;font-size:14px;font-weight:600;color:var(--text);outline:none;width:180px" onclick="event.stopPropagation()" onchange="updateGalLabel(' + gi + ',this.value)"></div>' +
+        '<span class="gal-service-toggle" id="galtog-' + gi + '">\u25BC</span>' +
+      '</div>' +
+      '<div class="gal-service-body" id="galbody-' + gi + '">' +
+        '<div class="gal-folder-row"><span class="gal-folder-label">\uD83D\uDCC1 Folder:</span>' +
+          '<input class="gal-folder-input" type="text" value="' + gal.folder + '" onchange="updateGalFolder(' + gi + ',this.value)"></div>' +
+        '<div class="gal-imgs-hdr"><span>Filename</span><span>Caption</span><span></span></div>' +
+        imgRows +
+        '<button class="btn btn-ghost btn-sm" style="margin-top:6px" onclick="addGalImage(' + gi + ')">+ Add Image</button>' +
+      '</div></div>';
+  }).join('');
+}
+
+function toggleGalCard(gi) {
+  var body = document.getElementById('galbody-' + gi);
+  var tog  = document.getElementById('galtog-' + gi);
+  if (body) body.classList.toggle('open');
+  if (tog)  tog.classList.toggle('open');
+}
+function updateGalLabel(gi, val)           { if (_galConfigData) _galConfigData.galleries[gi].label = val; }
+function updateGalFolder(gi, val)          { if (_galConfigData) _galConfigData.galleries[gi].folder = val; }
+function updateGalImage(gi, ii, field, val){ if (_galConfigData) _galConfigData.galleries[gi].images[ii][field] = val; }
+function removeGalImage(gi, ii)            { if (!_galConfigData) return; _galConfigData.galleries[gi].images.splice(ii,1); renderGalEditor(); }
+function addGalImage(gi)                   { if (!_galConfigData) return; var n=_galConfigData.galleries[gi].images.length+1; _galConfigData.galleries[gi].images.push({file:n+'.jpg',caption:'Photo '+n}); renderGalEditor(); }
+function addGalleryService() {
+  if (!_galConfigData) _galConfigData = loadGalConfig();
+  var n = _galConfigData.galleries.length + 1;
+  _galConfigData.galleries.push({key:'service-'+n, label:'New Service', icon:'\uD83D\uDCF7', folder:'images/service-'+n, images:[{file:'1.jpg',caption:'Before'},{file:'2.jpg',caption:'After'}]});
+  renderGalEditor();
+}
+function saveGalleryConfig() {
+  if (!_galConfigData) return;
+  localStorage.setItem('blw-gallery-config', JSON.stringify(_galConfigData));
+  var ind = document.getElementById('gal-save-indicator');
+  if (ind) { ind.classList.add('show'); setTimeout(function(){ ind.classList.remove('show'); }, 2500); }
+  showToast('\u2713','Gallery saved \u2014 download JSON and upload to GitHub');
+}
+function exportGalleryConfig() {
+  if (!_galConfigData) return;
+  var json = JSON.stringify(_galConfigData, null, 2);
+  var blob = new Blob([json], {type:'application/json'});
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement('a');
+  a.href=url; a.download='gallery-config.json';
+  document.body.appendChild(a); a.click();
+  document.body.removeChild(a);
+  setTimeout(function(){ URL.revokeObjectURL(url); }, 1000);
+  showToast('\u2B07\uFE0F','gallery-config.json downloaded');
+}
+function exportAllJobsIcal() {
+  var jobs = quotes.filter(function(q){ return q.scheduledDate && q.scheduledTime; });
+  if (!jobs.length) { showToast('\u26a0\uFE0F','No scheduled jobs'); return; }
+  var events = jobs.map(function(q){ return buildICalEvent(q, q.scheduledDate, q.scheduledTime); }).join('\r\n');
+  var ics = 'BEGIN:VCALENDAR\r\nVERSION:2.0\r\nPRODID:-//Big League Washes//EN\r\nCALSCALE:GREGORIAN\r\nX-WR-CALNAME:Big League Washes Jobs\r\n' + events + '\r\nEND:VCALENDAR';
+  var blob = new Blob([ics], {type:'text/calendar'});
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement('a');
+  a.href=url; a.download='BigLeagueWashes-Schedule.ics';
+  document.body.appendChild(a); a.click();
+  document.body.removeChild(a);
+  setTimeout(function(){ URL.revokeObjectURL(url); }, 1000);
+  showToast('\uD83D\uDCC5',jobs.length+' jobs exported');
+}
+
+// Start
 checkAuth();
+;
+  if (errEl) errEl.classList.remove('show');
+  var overlay = document.getElementById('auth-overlay');
+  if (overlay) {
+    overlay.style.opacity = '0';
+    overlay.style.transition = 'opacity .3s';
+    setTimeout(function() {
+      overlay.classList.remove('open');
+      overlay.style.opacity = '';
+      initApp();
+    }, 300);
+  }
+
+
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Enter') {
+    var overlay = document.getElementById('auth-overlay');
+    if (overlay && overlay.classList.contains('open')) doLogin();
+  }
+});
+
+// Start the app
+checkAuth();
+
 </script>
 
 <!-- AUTH OVERLAY -->
