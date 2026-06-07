@@ -1834,8 +1834,8 @@ var SVC_KEYS = ['house','driveway','sidewalk','patio','pool','fence','junk'];
 var SVC_NAMES = {house:'Soft wash house',driveway:'Driveway',sidewalk:'Sidewalk',patio:'Patio',pool:'Pool deck',fence:'Fence',junk:'Junk removal'};
 var MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
 
-var quotes = JSON.parse(localStorage.getItem('blw-quotes') || '[]');
-var schedules = JSON.parse(localStorage.getItem('blw-schedules') || '{}');
+var quotes = (function(){ try { return JSON.parse(localStorage.getItem('blw-quotes') || '[]'); } catch(e) { localStorage.removeItem('blw-quotes'); return []; } })();
+var schedules = (function(){ try { return JSON.parse(localStorage.getItem('blw-schedules') || '{}'); } catch(e) { localStorage.removeItem('blw-schedules'); return {}; } })();
 var selected = new SimpleSet();
 var svcPrices = {}, svcAreas = {};
 var junkItems = [];
@@ -4430,6 +4430,8 @@ function save() {
 }
 
 // ── INIT ──────────────────────────────────────────────────────────
+function initGCal() { /* Google Calendar init - placeholder */ }
+
 function initApp() {
   loadFromSupabase().then(function(loaded) {
     renderDash();
@@ -4716,13 +4718,7 @@ function quickDelete(id) {
   if (dp && dp.classList.contains('open')) closeDetailPanel();
 }
 
-// Start after DOM ready
-if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', function() { checkAuth(); });
-} else {
-  checkAuth();
-}
-
+// Start the app
 document.addEventListener('keydown', function(e) {
   if (e.key === 'Enter') {
     var overlay = document.getElementById('auth-overlay');
@@ -4730,9 +4726,8 @@ document.addEventListener('keydown', function(e) {
   }
 });
 
-// Start after DOM ready
-if (document.readyState === "loading") {
-  document.addEventListener("DOMContentLoaded", function() { checkAuth(); });
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', function() { checkAuth(); });
 } else {
   checkAuth();
 }
