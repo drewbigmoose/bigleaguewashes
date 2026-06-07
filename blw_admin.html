@@ -1823,9 +1823,7 @@ SimpleSet.prototype.has    = function(v) { return Object.prototype.hasOwnPropert
 SimpleSet.prototype.add    = function(v) { this._d[v] = true; return this; };
 SimpleSet.prototype.delete = function(v) { delete this._d[v]; };
 SimpleSet.prototype.clear  = function()  { this._d = {}; };
-Object.defineProperty(SimpleSet.prototype, 'size', {
-  get: function() { return Object.keys(this._d).length; }
-});
+// SimpleSet.size not needed
 
 
 function getLogo(){var el=document.getElementById('blw-logo-data');return el?el.src:'';}
@@ -1881,9 +1879,9 @@ var topInfo = {
 };
 
 function goTo(id) {
-  document.querySelectorAll('.screen').forEach(function(s) { s.classList.remove('active'); });
+  Array.prototype.slice.call(document.querySelectorAll('.screen')).forEach(function(s) { s.classList.remove('active'); });
   document.getElementById('sc-' + id).classList.add('active');
-  document.querySelectorAll('.ni').forEach(function(n) { n.classList.remove('active'); });
+  Array.prototype.slice.call(document.querySelectorAll('.ni')).forEach(function(n) { n.classList.remove('active'); });
   var ni = document.getElementById('nav-' + id); if (ni) ni.classList.add('active');
   var m = topInfo[id] || [id, ''];
   document.getElementById('tb-title').textContent = m[0];
@@ -2660,9 +2658,9 @@ function editQuote(id) {
   banner.style.display = 'flex';
   document.getElementById('edit-banner-info').textContent = 'Editing quote ' + q.qnum + ' — ' + cName(q);
   // Navigate to the new-quote screen (which doubles as edit)
-  document.querySelectorAll('.screen').forEach(function(s) { s.classList.remove('active'); });
+  Array.prototype.slice.call(document.querySelectorAll('.screen')).forEach(function(s) { s.classList.remove('active'); });
   document.getElementById('sc-new-quote').classList.add('active');
-  document.querySelectorAll('.ni').forEach(function(n) { n.classList.remove('active'); });
+  Array.prototype.slice.call(document.querySelectorAll('.ni')).forEach(function(n) { n.classList.remove('active'); });
   document.getElementById('nav-new-quote').classList.add('active');
   document.getElementById('tb-title').textContent = 'Edit Quote';
   document.getElementById('tb-sub').textContent = 'Editing ' + q.qnum + ' for ' + cName(q) + ' — changes saved when you Preview & Save';
@@ -2724,7 +2722,7 @@ function miniDayClick(dk) {
 function miniSelTime(t) {
   _selTime = t;
   document.getElementById('confirm-sched-btn').disabled = false;
-  document.querySelectorAll('.slot-item.slot-avail').forEach(function(el) { el.classList.remove('slot-sel'); });
+  Array.prototype.slice.call(document.querySelectorAll('.slot-item.slot-avail')).forEach(function(el) { el.classList.remove('slot-sel'); });
   event.currentTarget.classList.add('slot-sel');
 }
 function confirmSched() {
@@ -2812,8 +2810,8 @@ function resetForm() {
     var cb = document.getElementById('calc-' + k); if (cb) cb.innerHTML = calcNote('Enter dimensions to calculate');
     svcPrices[k] = 0; svcAreas[k] = 0;
   });
-  document.querySelectorAll('.dim-in').forEach(function(i) { i.value = ''; });
-  document.querySelectorAll('.rate-inp').forEach(function(i) { i.value = '0.305'; });
+  Array.prototype.slice.call(document.querySelectorAll('.dim-in')).forEach(function(i) { i.value = ''; });
+  Array.prototype.slice.call(document.querySelectorAll('.rate-inp')).forEach(function(i) { i.value = '0.305'; });
   junkItems = []; renderJunkItems();
   expenses = {supplies: [], workers: [], other: []};
   renderExpenses();
@@ -2822,11 +2820,16 @@ function resetForm() {
 }
 
 // ─── MODAL HELPERS ────────────────────────────────────────────────────────────
-function openM(id) { document.getElementById(id).classList.add('open'); }
-function closeM(id) { document.getElementById(id).classList.remove('open'); }
-document.querySelectorAll('.overlay').forEach(function(o) {
-  o.addEventListener('click', function(e) { if (e.target === o) o.classList.remove('open'); });
-});
+function openM(id) { var el=document.getElementById(id); if(el) el.classList.add('open'); }
+function closeM(id) { var el=document.getElementById(id); if(el) el.classList.remove('open'); }
+(function() {
+  var overlays = document.querySelectorAll('.overlay');
+  for (var _i = 0; _i < overlays.length; _i++) {
+    (function(o) {
+      o.addEventListener('click', function(e) { if (e.target === o) o.classList.remove('open'); });
+    })(overlays[_i]);
+  }
+})();
 
 var _toastT;
 function showToast(icon, msg) {
@@ -2845,7 +2848,7 @@ function showToast(icon, msg) {
 function mobGoTo(id) {
   goTo(id);
   // Update mobile nav active state
-  document.querySelectorAll('.mob-ni').forEach(function(n) { n.classList.remove('active'); });
+  Array.prototype.slice.call(document.querySelectorAll('.mob-ni')).forEach(function(n) { n.classList.remove('active'); });
   var mn = document.getElementById('mob-nav-' + id);
   if (mn) mn.classList.add('active');
   // Update mobile topbar title
@@ -2856,7 +2859,7 @@ function mobGoTo(id) {
 
 function startNewQuoteMob() {
   startNewQuote();
-  document.querySelectorAll('.mob-ni').forEach(function(n) { n.classList.remove('active'); });
+  Array.prototype.slice.call(document.querySelectorAll('.mob-ni')).forEach(function(n) { n.classList.remove('active'); });
   var mn = document.getElementById('mob-nav-new-quote');
   if (mn) mn.classList.add('active');
   var mtitle = document.getElementById('mob-topbar-title');
@@ -3184,7 +3187,7 @@ function inlineSelTime(t) {
   _selTime = t;
   var btn = document.getElementById('inline-confirm-sched-btn');
   if (btn) btn.disabled = false;
-  document.querySelectorAll('#inline-slots-list .slot-avail').forEach(function(el) { el.classList.remove('slot-sel'); });
+  Array.prototype.slice.call(document.querySelectorAll('#inline-slots-list .slot-avail')).forEach(function(el) { el.classList.remove('slot-sel'); });
   event.currentTarget.classList.add('slot-sel');
 }
 
@@ -3554,7 +3557,7 @@ function renderExport() {
 }
 
 function showExportTab(id, btn) {
-  document.querySelectorAll('.export-tab').forEach(function(t){t.classList.remove('active');});
+  Array.prototype.slice.call(document.querySelectorAll('.export-tab')).forEach(function(t){t.classList.remove('active');});
   btn.classList.add('active');
   showExportTabById(id);
 }
@@ -4592,8 +4595,8 @@ function showDeleteInPanel(show) {
 var _galConfigData = null;
 
 function showSettingsPanel(id) {
-  document.querySelectorAll('.settings-panel').forEach(function(p){ p.classList.remove('sopen'); });
-  document.querySelectorAll('.settings-nav-item').forEach(function(n){ n.classList.remove('sact'); });
+  Array.prototype.slice.call(document.querySelectorAll('.settings-panel')).forEach(function(p){ p.classList.remove('sopen'); });
+  Array.prototype.slice.call(document.querySelectorAll('.settings-nav-item')).forEach(function(n){ n.classList.remove('sact'); });
   var panel = document.getElementById('sp-' + id);
   var nav   = document.getElementById('snav-' + id);
   if (panel) panel.classList.add('sopen');
@@ -4697,21 +4700,28 @@ function exportAllJobsIcal() {
   showToast('\uD83D\uDCC5',jobs.length+' jobs exported');
 }
 
-// Start
-checkAuth();
-;
-  if (errEl) errEl.classList.remove('show');
-  var overlay = document.getElementById('auth-overlay');
-  if (overlay) {
-    overlay.style.opacity = '0';
-    overlay.style.transition = 'opacity .3s';
-    setTimeout(function() {
-      overlay.classList.remove('open');
-      overlay.style.opacity = '';
-      initApp();
-    }, 300);
-  }
+function quickDelete(id) {
+  var q = quotes.find(function(x){ return x.id===id; });
+  if (!q) return;
+  if (!confirm('Delete ' + q.qnum + ' for ' + cName(q) + '?\nThis cannot be undone.')) return;
+  quotes = quotes.filter(function(x){ return x.id!==id; });
+  Object.keys(schedules).forEach(function(dk){
+    schedules[dk] = (schedules[dk]||[]).filter(function(s){ return s.quoteId!==id; });
+    if (!schedules[dk].length) delete schedules[dk];
+  });
+  save(); deleteQuoteFromSupabase(id);
+  showToast('\uD83D\uDDD1','Quote deleted');
+  renderQuotes(); renderDash(); renderJobs();
+  var dp = document.getElementById('detail-panel');
+  if (dp && dp.classList.contains('open')) closeDetailPanel();
+}
 
+// Start after DOM ready
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', function() { checkAuth(); });
+} else {
+  checkAuth();
+}
 
 document.addEventListener('keydown', function(e) {
   if (e.key === 'Enter') {
@@ -4720,8 +4730,12 @@ document.addEventListener('keydown', function(e) {
   }
 });
 
-// Start the app
-checkAuth();
+// Start after DOM ready
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", function() { checkAuth(); });
+} else {
+  checkAuth();
+}
 
 </script>
 
