@@ -1771,6 +1771,63 @@ img, video { max-width: 100%; height: auto; }
         </div>
       </div>
       <div class="fg"><div class="fl">Payment note <span>optional</span></div><input type="text" id="track-not<script>
+// ─── POLYFILLS ───────────────────────────────────────────────────
+if (!Array.prototype.findIndex) {
+  Array.prototype.findIndex = function(fn) {
+    for (var i = 0; i < this.length; i++) { if (fn(this[i], i, this)) return i; }
+    return -1;
+  };
+}
+if (!Array.prototype.find) {
+  Array.prototype.find = function(fn) {
+    for (var i = 0; i < this.length; i++) { if (fn(this[i], i, this)) return this[i]; }
+    return undefined;
+  };
+}
+if (!Array.prototype.includes) {
+  Array.prototype.includes = function(v) { return this.indexOf(v) >= 0; };
+}
+if (!String.prototype.includes) {
+  String.prototype.includes = function(v) { return this.indexOf(v) >= 0; };
+}
+if (!String.prototype.padStart) {
+  String.prototype.padStart = function(n, c) {
+    var s = String(this); c = c || ' ';
+    while (s.length < n) s = c + s;
+    return s;
+  };
+}
+if (!String.prototype.padEnd) {
+  String.prototype.padEnd = function(n, c) {
+    var s = String(this); c = c || ' ';
+    while (s.length < n) s = s + c;
+    return s;
+  };
+}
+if (!String.prototype.startsWith) {
+  String.prototype.startsWith = function(v) { return this.indexOf(v) === 0; };
+}
+if (!Object.assign) {
+  Object.assign = function(t) {
+    for (var i = 1; i < arguments.length; i++) {
+      var s = arguments[i];
+      for (var k in s) { if (Object.prototype.hasOwnProperty.call(s, k)) t[k] = s[k]; }
+    }
+    return t;
+  };
+}
+
+// Simple Set polyfill (replaces new Set())
+function SimpleSet() { this._d = {}; }
+SimpleSet.prototype.has    = function(v) { return Object.prototype.hasOwnProperty.call(this._d, v); };
+SimpleSet.prototype.add    = function(v) { this._d[v] = true; return this; };
+SimpleSet.prototype.delete = function(v) { delete this._d[v]; };
+SimpleSet.prototype.clear  = function()  { this._d = {}; };
+Object.defineProperty(SimpleSet.prototype, 'size', {
+  get: function() { return Object.keys(this._d).length; }
+});
+
+
 function getLogo(){var el=document.getElementById('blw-logo-data');return el?el.src:'';}
 var LOGO=getLogo;
 
@@ -1781,7 +1838,7 @@ var MONTHS = ['January','February','March','April','May','June','July','August',
 
 var quotes = JSON.parse(localStorage.getItem('blw-quotes') || '[]');
 var schedules = JSON.parse(localStorage.getItem('blw-schedules') || '{}');
-var selected = new Set();
+var selected = new SimpleSet();
 var svcPrices = {}, svcAreas = {};
 var junkItems = [];
 var expenses = {supplies:[], workers:[], other:[]};
