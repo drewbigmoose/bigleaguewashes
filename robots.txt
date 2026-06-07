@@ -1,0 +1,5 @@
+User-agent: *
+Allow: /
+Disallow: /big-league-washes.html
+
+Sitemap: https://bigleaguewashes.com/sitemap.xml
