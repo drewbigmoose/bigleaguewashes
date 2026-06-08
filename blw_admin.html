@@ -349,6 +349,108 @@ details.exp-type summary:hover{background:rgba(255,255,255,.03)}
 .exp-item-desc{font-size:13px;font-weight:500;color:var(--text)}
 .exp-item-meta{font-size:11px;color:var(--muted2);margin-top:2px}
 .exp-item-amt{font-size:13px;font-weight:700;color:var(--white);flex-shrink:0;margin-left:12px}
+
+/* ═══ iOS MOBILE POLISH ════════════════════════════════════════════════ */
+@media(max-width:768px){
+  /* ── Global iOS feel ──────────────────────────────── */
+  *{-webkit-tap-highlight-color:transparent}
+  body{touch-action:manipulation;-webkit-text-size-adjust:100%}
+
+  /* ── Large-title nav (iOS Settings pattern) ──────── */
+  .topbar{padding:4px 0;margin-bottom:20px}
+  .topbar h1{font-size:28px;font-weight:800;letter-spacing:-.6px;line-height:1.1}
+  .topbar p{font-size:13px;margin-top:4px;opacity:.7}
+  .topbar .btn-p{min-height:40px;border-radius:20px;padding:0 18px;font-size:13px;font-weight:700}
+
+  /* ── Touch targets: 44pt minimum ─────────────────── */
+  .btn{min-height:44px;display:inline-flex;align-items:center;justify-content:center;border-radius:10px}
+  .btn.sm{min-height:40px;padding:8px 14px;font-size:13px;border-radius:9px}
+
+  /* ── Press / active states ───────────────────────── */
+  .btn:active{transform:scale(.96);opacity:.8;transition:none}
+  .qc:active{transform:scale(.985);transition:transform .08s}
+  .day-job:active{transform:scale(.985);transition:transform .08s}
+  .cd.has-jobs:active{background:rgba(26,108,246,.12);transition:background .08s}
+  .client-row:active td{background:rgba(26,108,246,.1)!important}
+  details.exp-type summary:active{background:rgba(26,108,246,.1)}
+
+  /* ── Cards: iOS inset grouped style ──────────────── */
+  .card{border-radius:14px;padding:18px 16px}
+  .qc{border-radius:14px;padding:16px 18px;margin-bottom:12px}
+  .stat{border-radius:14px;padding:16px}
+  .sval{font-size:22px}
+
+  /* ── Disclosure chevrons on navigable items ──────── */
+  .qc[data-key]{position:relative;padding-right:38px}
+  .qc[data-key]::after{content:'\203A';position:absolute;right:16px;top:50%;transform:translateY(-50%);font-size:28px;font-weight:300;color:var(--muted);line-height:1}
+  .day-job{position:relative;padding-right:36px}
+  .day-job::after{content:'\203A';position:absolute;right:14px;top:50%;transform:translateY(-50%);font-size:26px;font-weight:300;color:var(--muted);line-height:1}
+
+  /* ── Form inputs: taller + prevent iOS zoom ──────── */
+  .fld input,.fld select,.fld textarea{min-height:48px;padding:12px 16px;font-size:16px;border-radius:10px}
+  .fld select{appearance:none;-webkit-appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' fill='%2394a3b8'%3E%3Cpath d='M1 1l5 5 5-5'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 14px center;padding-right:36px}
+  .fld label{font-size:11px;margin-bottom:2px;text-transform:uppercase;letter-spacing:.5px}
+  .filter-bar select,.filter-bar input{min-height:44px;font-size:16px;border-radius:10px}
+  .sr select,.sr input{min-height:44px;font-size:16px;border-radius:9px;padding:10px 14px}
+
+  /* ── Bottom nav: iOS tab-bar sizing ──────────────── */
+  #mob-nav{height:auto;padding-top:8px;padding-bottom:max(8px,env(safe-area-inset-bottom,8px))}
+  .mn-item{min-height:44px;padding:4px 4px 2px;font-size:10px;letter-spacing:0;text-transform:none;font-weight:500}
+  .mn-item .mn-icon{font-size:24px}
+  .mn-fab{width:52px;height:52px;margin-top:-24px;font-size:22px;box-shadow:0 6px 20px rgba(26,108,246,.5)}
+
+  /* ── Bottom sheets: iOS spring curves + safe area ── */
+  #more-drawer,#day-panel,#send-modal{transition:transform .45s cubic-bezier(.32,.72,0,1)}
+  #more-drawer{padding-bottom:max(24px,env(safe-area-inset-bottom,24px))}
+  #send-modal{padding-bottom:max(28px,env(safe-area-inset-bottom,28px))}
+  #day-panel{padding-bottom:max(24px,env(safe-area-inset-bottom,24px))}
+  .drawer-item{min-height:48px;font-size:16px;border-radius:10px;margin:0 8px}
+  .drawer-item:active{background:rgba(26,108,246,.12)}
+
+  /* ── Calendar cells: proper tap area ─────────────── */
+  .cd{min-height:52px;border-radius:10px}
+  .cdh{font-size:10px;font-weight:600}
+  .cdn{font-size:12px;font-weight:700}
+
+  /* ── Total bar: stacked iOS style ────────────────── */
+  .tbar{border-radius:16px;padding:20px}
+  .tbar .btn{width:100%;min-height:50px;font-size:16px;border-radius:12px;margin-top:4px}
+
+  /* ── Section headers ─────────────────────────────── */
+  .sh{font-size:16px;font-weight:700;letter-spacing:-.2px}
+
+  /* ── Badge sizing for touch ──────────────────────── */
+  .badge{padding:5px 10px;font-size:12px;border-radius:20px}
+
+  /* ── Card action buttons: wrap cleanly ───────────── */
+  .qc-act{gap:8px;flex-wrap:wrap}
+  .qc-ft{flex-wrap:wrap;gap:10px}
+
+  /* ── Smooth momentum scroll ──────────────────────── */
+  #main{scroll-behavior:smooth;overscroll-behavior:contain}
+
+  /* ── Send modal: iOS sizing ──────────────────────── */
+  .sbtn{min-height:50px;font-size:16px;border-radius:12px}
+  .send-prev{font-size:14px;max-height:180px;border-radius:12px}
+
+  /* ── Expense accordion: iOS sizing ───────────────── */
+  details.exp-type{border-radius:12px}
+  details.exp-type summary{min-height:48px;font-size:15px;padding:14px 18px}
+  .exp-item{padding:12px 0;font-size:14px}
+
+  /* ── iOS back button style ───────────────────────── */
+  .btn-back{font-size:17px;font-weight:400;color:var(--blue-lt);background:none!important;border:none!important;padding:8px 4px 8px 0;min-height:44px;gap:4px}
+  .btn-back:hover,.btn-back:active{background:none!important;color:var(--blue)}
+
+  /* ── Empty states ────────────────────────────────── */
+  .empty{padding:60px 20px;font-size:15px}
+}
+
+/* ── iOS overscroll bounce ─────────────────────────── */
+@supports(-webkit-overflow-scrolling:touch){
+  #main{-webkit-overflow-scrolling:touch}
+}
+
 </style>
 </head>
 <body>
@@ -531,7 +633,7 @@ details.exp-type summary:hover{background:rgba(255,255,255,.03)}
 <div id="screen-client-detail" class="screen">
   <div class="topbar">
     <div style="display:flex;align-items:center;gap:12px">
-      <button class="btn btn-o" onclick="nav('clients')">&#8592; Clients</button>
+      <button class="btn btn-back" onclick="nav('clients')">&#8249; Clients</button>
       <div><h1 id="cd-name">Client</h1><p id="cd-sub" style="color:var(--muted2);font-size:13px;margin-top:2px"></p></div>
     </div>
     <button class="btn btn-p" id="cd-new-btn">&#43; New Quote</button>
