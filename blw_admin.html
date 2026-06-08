@@ -162,19 +162,77 @@ tr:hover td{background:rgba(255,255,255,.03)}
 .screen{display:none}.screen.active{display:block}
 
 /* ── RESPONSIVE ────────────────────────────────────── */
+/* ── MOBILE NAV (hidden on desktop) ─────────────────────────── */
+#mob-nav{display:none}
+#more-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:400;backdrop-filter:blur(2px)}
+#more-overlay.open{display:block}
+#more-drawer{position:fixed;bottom:0;left:0;right:0;background:#0d1e38;border-radius:20px 20px 0 0;border:1px solid var(--border2);border-bottom:none;z-index:401;padding:8px 0 32px;transform:translateY(100%);transition:transform .3s cubic-bezier(.32,.72,0,1)}
+#more-drawer.open{transform:translateY(0)}
+.drawer-pill{width:36px;height:4px;background:rgba(255,255,255,.2);border-radius:4px;margin:10px auto 16px}
+.drawer-item{display:flex;align-items:center;gap:14px;padding:14px 24px;font-size:15px;font-weight:500;color:var(--muted2);cursor:pointer;transition:all .15s}
+.drawer-item:hover,.drawer-item:active{background:rgba(255,255,255,.06);color:var(--white)}
+.drawer-item .di-icon{font-size:20px;width:28px;text-align:center}
+.drawer-item .di-badge{margin-left:auto;background:rgba(26,108,246,.2);color:var(--blue-lt);font-size:11px;font-weight:700;padding:2px 8px;border-radius:20px}
+.drawer-sep{height:1px;background:var(--border);margin:8px 16px}
+
 @media(max-width:768px){
-  #sidebar{width:100%;position:fixed;bottom:0;top:auto;height:56px;flex-direction:row;z-index:100;padding:0;border-right:none;border-top:1px solid var(--border)}
-  .sb-logo,.sb-sec,.sb-bottom,.sb-sync,.sb-user{display:none}
-  .sb-nav{display:flex;flex-direction:row;width:100%;overflow-x:auto}
-  .sb-nav a{flex-direction:column;gap:3px;padding:6px 12px;font-size:10px;border-left:none;border-top:3px solid transparent;min-width:64px;text-align:center}
-  .sb-nav .icon{font-size:20px;width:auto}
-  .sb-nav a.active{border-top-color:var(--blue);border-left:none;background:rgba(26,108,246,.1)}
-  #main{padding:16px;padding-bottom:72px}
-  .stat-grid{grid-template-columns:1fr 1fr}
+  /* Hide desktop sidebar */
+  #sidebar{display:none}
+
+  /* App fills full height */
+  #app{height:100dvh;height:100vh}
+  body{height:100dvh;height:100vh;overflow:hidden}
+
+  /* Main content scrolls, clears bottom nav */
+  #main{
+    padding:16px;
+    padding-bottom:80px;
+    height:100%;
+    overflow-y:auto;
+    -webkit-overflow-scrolling:touch;
+  }
+
+  /* Responsive content */
+  .stat-grid{grid-template-columns:1fr 1fr;gap:10px}
   .fg{grid-template-columns:1fr}
   .fg3{grid-template-columns:1fr}
+  .topbar{gap:8px}
+  .topbar h1{font-size:18px}
+  table{font-size:12px}
+  th,td{padding:9px 10px}
+
+  /* Mobile bottom nav */
+  #mob-nav{
+    display:flex;
+    position:fixed;
+    bottom:0;left:0;right:0;
+    height:60px;
+    background:rgba(8,17,30,.96);
+    border-top:1px solid var(--border2);
+    z-index:200;
+    backdrop-filter:blur(12px);
+    padding-bottom:env(safe-area-inset-bottom,0px);
+  }
+  .mn-item{
+    flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
+    gap:3px;font-size:10px;font-weight:600;color:var(--muted2);
+    cursor:pointer;border-top:3px solid transparent;transition:all .15s;
+    user-select:none;-webkit-tap-highlight-color:transparent;
+    letter-spacing:.02em;text-transform:uppercase;
+  }
+  .mn-item:hover,.mn-item:active{color:var(--white)}
+  .mn-item.active{color:var(--blue-lt);border-top-color:var(--blue)}
+  .mn-item .mn-icon{font-size:22px;line-height:1}
+  .mn-fab{
+    width:46px;height:46px;border-radius:50%;
+    background:var(--blue);display:flex;align-items:center;justify-content:center;
+    font-size:20px;margin-top:-20px;
+    box-shadow:0 4px 16px rgba(26,108,246,.5);
+    border:3px solid rgba(8,17,30,.96);
+    transition:transform .15s;
+  }
+  .mn-item:active .mn-fab{transform:scale(.92)}
 }
-@media(max-width:480px){.stat-grid{grid-template-columns:1fr 1fr}}
 </style>
 </head>
 <body>
@@ -854,6 +912,76 @@ if(sessionStorage.getItem('blw')==='1'){
   document.getElementById('app').classList.add('show');
   init();
 }
+
+// ═══ MOBILE NAV ════════════════════════════════════════════════════════
+function openMore() {
+  document.getElementById('more-overlay').classList.add('open');
+  document.getElementById('more-drawer').classList.add('open');
+}
+
+function closeMore() {
+  document.getElementById('more-overlay').classList.remove('open');
+  document.getElementById('more-drawer').classList.remove('open');
+}
+
+// Override nav() to also update mobile nav active state
+var _origNav = nav;
+nav = function(id) {
+  _origNav(id);
+  // Update mobile nav active state
+  document.querySelectorAll('.mn-item').forEach(function(el) {
+    el.classList.toggle('active', el.getAttribute('data-mn') === id);
+  });
+  // Close more drawer if open
+  closeMore();
+};
+
 </script>
+
+<!-- ── MOBILE BOTTOM NAV ──────────────────────────────────────────── -->
+<div id="mob-nav">
+  <div class="mn-item active" data-mn="dash" onclick="nav('dash')">
+    <div class="mn-icon">&#128202;</div>
+    <span>Dash</span>
+  </div>
+  <div class="mn-item" data-mn="schedule" onclick="nav('schedule')">
+    <div class="mn-icon">&#128197;</div>
+    <span>Schedule</span>
+  </div>
+  <div class="mn-item" data-mn="new-quote" onclick="nav('new-quote')">
+    <div class="mn-fab">&#9999;&#65039;</div>
+  </div>
+  <div class="mn-item" data-mn="quotes" onclick="nav('quotes')">
+    <div class="mn-icon">&#128203;</div>
+    <span>Quotes</span>
+  </div>
+  <div class="mn-item" id="mn-more-btn" onclick="openMore()">
+    <div class="mn-icon">&#9776;</div>
+    <span>More</span>
+  </div>
+</div>
+
+<!-- ── MORE DRAWER ────────────────────────────────────────────────── -->
+<div id="more-overlay" onclick="closeMore()"></div>
+<div id="more-drawer">
+  <div class="drawer-pill"></div>
+  <div class="drawer-item" onclick="nav('jobs');closeMore()">
+    <span class="di-icon">&#128295;</span><span>Jobs</span>
+  </div>
+  <div class="drawer-item" onclick="nav('clients');closeMore()">
+    <span class="di-icon">&#128101;</span><span>Clients</span>
+  </div>
+  <div class="drawer-item" onclick="nav('finance');closeMore()">
+    <span class="di-icon">&#128176;</span><span>Finance</span>
+  </div>
+  <div class="drawer-item" onclick="nav('export');closeMore()">
+    <span class="di-icon">&#11015;&#65039;</span><span>Export</span>
+  </div>
+  <div class="drawer-sep"></div>
+  <div class="drawer-item" onclick="doLogout()">
+    <span class="di-icon">&#128682;</span><span>Sign Out</span>
+  </div>
+</div>
+
 </body>
 </html>
