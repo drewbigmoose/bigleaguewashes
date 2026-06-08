@@ -202,7 +202,7 @@ tr:hover td{background:rgba(255,255,255,.03)}
   /* THE SCROLL FIX — explicit height minus bottom nav */
   #main{
     padding:16px;
-    padding-bottom:84px;
+    padding-bottom:160px;
     height:calc(100dvh - 60px);
     height:calc(100vh - 60px);
     min-height:0;
@@ -267,6 +267,34 @@ tr:hover td{background:rgba(255,255,255,.03)}
     transition:transform .15s;
   }
   .mn-item:active .mn-fab{transform:scale(.92)}
+}
+
+/* ── SEND QUOTE MODAL ──────────────────────────────── */
+#send-bg{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:600;display:none;align-items:flex-end;justify-content:center;backdrop-filter:blur(3px)}
+#send-bg.open{display:flex}
+@media(min-width:769px){#send-bg{align-items:center}}
+#send-modal{background:#0d1e38;border-radius:20px 20px 0 0;border:1px solid var(--border2);width:100%;max-width:480px;padding:24px 20px 36px}
+@media(min-width:769px){#send-modal{border-radius:16px;padding:28px}}
+.send-hd{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px}
+.send-hd h3{font-size:17px;font-weight:700;color:var(--white)}
+.send-hd span{color:var(--muted2);font-size:13px}
+.send-to{font-size:13px;color:var(--muted2);margin-bottom:12px}
+.send-to strong{color:var(--text)}
+.send-prev{background:rgba(255,255,255,.05);border:1px solid var(--border);border-radius:10px;padding:14px;font-size:13px;color:var(--text);line-height:1.6;white-space:pre-wrap;margin-bottom:16px;max-height:150px;overflow-y:auto}
+.send-btns{display:flex;gap:10px;margin-bottom:10px}
+.sbtn{flex:1;padding:13px;border-radius:10px;border:none;font-size:14px;font-weight:700;cursor:pointer;transition:opacity .15s}
+.sbtn:hover{opacity:.85}
+.sbtn.sms{background:var(--green);color:#fff}
+.sbtn.email{background:var(--blue);color:#fff}
+.sbtn.cancel{background:rgba(255,255,255,.07);color:var(--muted2);border:1px solid var(--border);width:100%}
+/* ── CALENDAR MOBILE ─────────────────────────────────── */
+@media(max-width:768px){
+  .cal{gap:3px}
+  .cdh{font-size:9px;padding:3px 0;letter-spacing:0}
+  .cd{min-height:54px;padding:5px 4px;border-radius:8px}
+  .cdn{font-size:11px;font-weight:700;margin-bottom:2px}
+  .cj{font-size:9px;padding:2px 4px;border-radius:3px;cursor:pointer;margin-bottom:1px}
+  .cj:active{opacity:.7}
 }
 </style>
 </head>
@@ -584,6 +612,7 @@ function buildQCard(x, opts) {
   h += '<div class="qc-ft"><strong class="qc-tot">'+fmt(x['Total Revenue']||0)+'</strong>';
   h += '<div class="qc-act">';
   h += '<button class="btn btn-o sm" onclick="editQ(this.closest(&#39;.qc&#39;).dataset.id)">Edit</button>';
+  h += ' <button class="btn btn-o sm" data-id="'+id+'" onclick="openSend(this.dataset.id)" title="Send">&#128228;</button>';
   if (opts.markPaid && x['Paid']!=='Yes') {
     h += '<button class="btn btn-g sm" onclick="markPaid(this.closest(&#39;.qc&#39;).dataset.id)">&#10003;</button>';
   }
@@ -621,7 +650,8 @@ function loadDash() {
       '<td>'+badgePaid(x['Paid'])+'</td>' +
       '<td style="white-space:nowrap">' +
         '<button class="btn btn-o sm" onclick="editQ(\'' + id + '\')">Edit</button>' +
-        ' <button class="btn btn-d sm" onclick="delQ(\'' + id + '\',\'' + qn + '\')">✕</button>' +
+        ' <button data-id="'+id+'" class="btn btn-o sm" onclick="openSend(this.dataset.id)" title="Send">&#128228;</button>' +
+        '<button class="btn btn-d sm" onclick="delQ(\'' + id + '\',\'' + qn + '\')">✕</button>' +
       '</td></tr>';
   }).join('');
   $('dash-tbody').innerHTML = rows || '<tr><td colspan="7" class="empty">No quotes yet — create your first one!</td></tr>';
@@ -653,7 +683,8 @@ function renderQuotes() {
       '<td>'+badgePaid(x['Paid'])+'</td>' +
       '<td style="white-space:nowrap">' +
         '<button class="btn btn-o sm" onclick="editQ(\'' + id + '\')">✏️ Edit</button>' +
-        ' <button class="btn btn-d sm" onclick="delQ(\'' + id + '\',\'' + qn + '\')">✕</button>' +
+        ' <button data-id="'+id+'" class="btn btn-o sm" onclick="openSend(this.dataset.id)" title="Send">&#128228;</button>' +
+        '<button class="btn btn-d sm" onclick="delQ(\'' + id + '\',\'' + qn + '\')">✕</button>' +
       '</td></tr>';
   }).join('');
   $('quotes-tbody').innerHTML = rows || '<tr><td colspan="8" class="empty">No quotes match your filters</td></tr>';
@@ -678,6 +709,7 @@ function renderJobs() {
       '<td>'+badgePaid(x['Paid'])+'</td>' +
       '<td style="white-space:nowrap">' +
         '<button class="btn btn-o sm" onclick="editQ(\'' + id + '\')">✏️ Edit</button>' +
+        ' <button data-id="'+id+'" class="btn btn-o sm" onclick="openSend(this.dataset.id)" title="Send">&#128228;</button>' +
         markPaid +
       '</td></tr>';
   }).join('');
@@ -746,7 +778,7 @@ function renderCal() {
   ALL.forEach(function(q) {
     var d = q['Scheduled Date']; if(!d) return;
     if(!jobMap[d]) jobMap[d] = [];
-    jobMap[d].push(esc((q['First Name']||'')+(q['Last Name']?' '+q['Last Name']:''))+(q['Scheduled Time']?' @'+q['Scheduled Time']:''));
+    jobMap[d].push({id:q['id'],lbl:esc((q['First Name']||'')+(q['Last Name']?' '+q['Last Name']:''))+(q['Scheduled Time']?' · '+q['Scheduled Time']:'')});
   });
 
   var html = '';
@@ -758,7 +790,7 @@ function renderCal() {
     var jobs = jobMap[ds]||[];
     html += '<div class="'+cls+'">';
     html += '<div class="cdn">'+d+'</div>';
-    jobs.forEach(function(j){ html += '<div class="cj">'+j+'</div>'; });
+    jobs.forEach(function(j){ html += '<div class="cj" data-id="'+esc(j.id)+'" onclick="editQ(this.dataset.id)">'+j.lbl+'</div>'; });
     html += '</div>';
   }
   $('cal').innerHTML = html;
@@ -1021,6 +1053,57 @@ nav = function(id) {
   closeMore();
 };
 
+
+// ═══ SEND QUOTE ════════════════════════════════════════════════════════
+var _sq = null;
+
+function openSend(id) {
+  _sq = ALL.find(function(q){ return q['id']===id; });
+  if (!_sq) { toast('Quote not found'); return; }
+  var nm = ((_sq['First Name']||'')+' '+(_sq['Last Name']||'')).trim();
+  var hasPh = !!(_sq['Phone']||'').replace(/\D/g,'');
+  var hasEm = !!(_sq['Email']||'').trim();
+  if (!hasPh && !hasEm) { toast('\u26a0\ufe0f No phone or email on this quote'); return; }
+  $('send-qnum').textContent = _sq['Quote #']||'';
+  $('send-to-name').textContent = nm || 'Customer';
+  $('send-prev').textContent = buildSendMsg(_sq);
+  $('send-sms-btn').style.display   = hasPh ? '' : 'none';
+  $('send-email-btn').style.display = hasEm ? '' : 'none';
+  $('send-bg').classList.add('open');
+}
+
+function closeSend() { $('send-bg').classList.remove('open'); _sq = null; }
+
+function buildSendMsg(q) {
+  var fn = (q['First Name']||'').trim();
+  var svcs = q['Services']||'your requested services';
+  var total = '$'+parseFloat(q['Total Revenue']||0).toFixed(2);
+  var sched = q['Scheduled Date']
+    ? '\nScheduled: '+q['Scheduled Date']+(q['Scheduled Time']?' @ '+q['Scheduled Time']:'')
+    : '';
+  return 'Hi '+(fn||'there')+'! Here\u2019s your quote from Big League Washes:\n\n'
+    +'Quote #: '+(q['Quote #']||'')+'\n'
+    +'Services: '+svcs+'\n'
+    +'Total: '+total
+    +sched
+    +'\n\nQuestions? Call or text Drew:\n(404) 617-2395\ndrew@bigleaguewashes.com';
+}
+
+function doSendSMS() {
+  if (!_sq) return;
+  var ph = (_sq['Phone']||'').replace(/\D/g,'');
+  if (ph.length===10) ph='1'+ph;
+  window.open('sms:+'+ph+'?&body='+encodeURIComponent(buildSendMsg(_sq)),'_blank');
+  closeSend(); toast('\ud83d\udcf1 Opening Messages\u2026');
+}
+
+function doSendEmail() {
+  if (!_sq) return;
+  var subj = 'Your Big League Washes Quote \u2014 '+(_sq['Quote #']||'');
+  window.open('mailto:'+(_sq['Email']||'')+'?subject='+encodeURIComponent(subj)+'&body='+encodeURIComponent(buildSendMsg(_sq)),'_blank');
+  closeSend(); toast('\u2709\ufe0f Opening email\u2026');
+}
+
 </script>
 
 <!-- ── MOBILE BOTTOM NAV ──────────────────────────────────────────── -->
@@ -1065,6 +1148,24 @@ nav = function(id) {
   <div class="drawer-sep"></div>
   <div class="drawer-item" onclick="doLogout()">
     <span class="di-icon">&#128682;</span><span>Sign Out</span>
+  </div>
+</div>
+
+
+<!-- ── SEND QUOTE MODAL ──────────────────────────────────────── -->
+<div id="send-bg" onclick="if(event.target===this)closeSend()">
+  <div id="send-modal">
+    <div class="send-hd">
+      <h3>&#128228; Send Quote</h3>
+      <span id="send-qnum"></span>
+    </div>
+    <div class="send-to">To: <strong id="send-to-name"></strong></div>
+    <div id="send-prev" class="send-prev"></div>
+    <div class="send-btns">
+      <button id="send-sms-btn" class="sbtn sms" onclick="doSendSMS()">&#128241; Text</button>
+      <button id="send-email-btn" class="sbtn email" onclick="doSendEmail()">&#9993; Email</button>
+    </div>
+    <button class="sbtn cancel" onclick="closeSend()">Cancel</button>
   </div>
 </div>
 
