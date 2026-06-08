@@ -475,6 +475,20 @@ details.exp-type summary:hover{background:rgba(255,255,255,.03)}
 .sc-lbl{font-size:13px;color:var(--muted2)}
 .sc-tot{font-size:17px;font-weight:800;color:var(--blue-lt)}
 
+
+/* ── OVERHEAD / BUSINESS EXPENSES ──────────────────── */
+#oh-bg.open{display:flex}
+@media(min-width:769px){#oh-bg{align-items:center!important}}
+.oh-month{margin-bottom:16px}
+.oh-month-hd{display:flex;justify-content:space-between;align-items:center;padding:10px 0 8px;border-bottom:1px solid var(--border);margin-bottom:8px;font-size:14px;color:var(--white)}
+.oh-item{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--border)}
+.oh-item:last-child{border-bottom:none}
+.oh-item-type{font-size:12px;font-weight:700;color:var(--blue-lt);text-transform:uppercase;letter-spacing:.3px;margin-bottom:2px}
+.oh-item-desc{font-size:13px;color:var(--muted2)}
+.oh-item-amt{font-size:14px;font-weight:700;color:var(--white);white-space:nowrap}
+@media(max-width:768px){
+  .stat-grid[style*="repeat(4"]{grid-template-columns:1fr 1fr!important}
+}
 </style>
 </head>
 <body>
@@ -697,6 +711,7 @@ var SVCS = [
 
 // ═══ STATE ═════════════════════════════════════════════════════════════
 var ALL = [];  // all quotes from Supabase
+var OVERHEADS = [];  // business expenses (not tied to a quote)
 
 // ═══ DB ════════════════════════════════════════════════════════════════
 async function dbGet(t, q) {
@@ -773,10 +788,14 @@ async function init() {
   setSync('spin');
   try {
     ALL = await dbGet('QUOTES', 'select=*&order=id.desc');
+    try {
+      var allExp = await dbGet('Expenses', 'select=*&order=id.desc');
+      OVERHEADS = allExp.filter(function(e){ return !e['Quote ID'] && !e['Quote #']; });
+    } catch(ex) { OVERHEADS = []; }
     setSync('online');
   } catch(e) {
     setSync('off');
-    ALL = [];
+    ALL = []; OVERHEADS = [];
     toast('⚠️ Could not load cloud data. Working offline.');
   }
   nav('dash');
@@ -1034,14 +1053,12 @@ function renderFinance() {
   });
 
   var ks = Object.keys(bm).sort().reverse();
-  var hasExp = Object.values(expTypes).some(function(t){ return t.total>0; });
-  if(!ks.length && !hasExp) {
-    $('fin-content').innerHTML='<div class="card"><p style="color:var(--muted);text-align:center;padding:40px">No finance data yet</p></div>';
-    return;
-  }
+  var tRev=0, tProjExp=0;
+  ks.forEach(function(k){ tRev+=bm[k].rev; tProjExp+=bm[k].exp; });
 
-  var tRev=0, tExp=0;
-  ks.forEach(function(k){ tRev+=bm[k].rev; tExp+=bm[k].exp; });
+  // Overhead expenses
+  var tOverhead = OVERHEADS.reduce(function(s,e){ return s+(e['Total']||0); },0);
+  var tAllExp = tProjExp + tOverhead;
 
   // Monthly table rows (desktop)
   var tableRows = ks.map(function(k){
@@ -1057,38 +1074,66 @@ function renderFinance() {
       '<div style="font-size:13px;display:flex;flex-direction:column;gap:4px">'+
         '<div style="display:flex;justify-content:space-between"><span style="color:var(--muted2)">Revenue</span><strong>'+fmt(m.rev)+'</strong></div>'+
         '<div style="display:flex;justify-content:space-between"><span style="color:var(--muted2)">Collected</span><span>'+fmt(m.paid)+'</span></div>'+
-        '<div style="display:flex;justify-content:space-between"><span style="color:var(--muted2)">Expenses</span><span style="color:#fc8a5a">'+fmt(m.exp)+'</span></div>'+
-        '<div style="display:flex;justify-content:space-between;border-top:1px solid var(--border);padding-top:6px;margin-top:4px"><span style="color:var(--muted2)">Net Profit</span><strong style="color:var(--green)">'+fmt(m.rev-m.exp)+'</strong></div>'+
+        '<div style="display:flex;justify-content:space-between"><span style="color:var(--muted2)">Job Costs</span><span style="color:#fc8a5a">'+fmt(m.exp)+'</span></div>'+
+        '<div style="display:flex;justify-content:space-between;border-top:1px solid var(--border);padding-top:6px;margin-top:4px"><span style="color:var(--muted2)">Net</span><strong style="color:var(--green)">'+fmt(m.rev-m.exp)+'</strong></div>'+
       '</div></div>';
   }).join('');
 
-  // Expense type breakdown using <details> accordion
+  // Expense type breakdown
+  var typeOrder = ['Supplies','Labor','Equipment','Other'];
   var expHTML = '';
-  ['Supplies','Labor','Equipment','Other'].forEach(function(t) {
-    var et = expTypes[t];
-    if (!et || !et.total) return;
-    expHTML += '<details class="exp-type">';
-    expHTML += '<summary><span>'+t+'</span><div><span class="et-total">'+fmt(et.total)+'</span><span class="et-arrow"> &#9658;</span></div></summary>';
-    expHTML += '<div class="exp-type-items">';
+  typeOrder.forEach(function(t) {
+    var et = expTypes[t]; if (!et || !et.total) return;
+    expHTML += '<details class="exp-type"><summary><span>'+t+'</span><div><span class="et-total">'+fmt(et.total)+'</span><span class="et-arrow"> \u25b6</span></div></summary><div class="exp-type-items">';
     et.items.forEach(function(item) {
-      expHTML += '<div class="exp-item">'+
-        '<div><div class="exp-item-desc">'+esc(item.desc)+'</div>'+
-        '<div class="exp-item-meta">'+item.qty+' &times; '+fmt(item.cost)+(item.qnum?' &middot; '+esc(item.qnum):'')+'</div></div>'+
-        '<div class="exp-item-amt">'+fmt(item.total)+'</div>'+
-      '</div>';
+      expHTML += '<div class="exp-item"><div><div class="exp-item-desc">'+esc(item.desc)+'</div><div class="exp-item-meta">'+item.qty+' \u00d7 '+fmt(item.cost)+(item.qnum?' \u00b7 '+esc(item.qnum):'')+'</div></div><div class="exp-item-amt">'+fmt(item.total)+'</div></div>';
     });
     expHTML += '</div></details>';
   });
 
+  // Business expenses section (grouped by month)
+  var ohByMonth = {};
+  OVERHEADS.forEach(function(e) {
+    var d = e['Date']||''; var k = d ? d.slice(0,7) : 'Undated';
+    if(!ohByMonth[k]) ohByMonth[k]=[];
+    ohByMonth[k].push(e);
+  });
+  var ohKeys = Object.keys(ohByMonth).sort().reverse();
+  var ohHTML = '';
+  if (OVERHEADS.length) {
+    ohHTML = ohKeys.map(function(k) {
+      var items = ohByMonth[k];
+      var mTotal = items.reduce(function(s,e){ return s+(e['Total']||0); },0);
+      return '<div class="oh-month"><div class="oh-month-hd"><strong>'+(k==='Undated'?k:fmtMonth(k))+'</strong><span>'+fmt(mTotal)+'</span></div>' +
+        items.map(function(e) {
+          return '<div class="oh-item">' +
+            '<div><div class="oh-item-type">'+esc(e['Type']||'Other')+'</div><div class="oh-item-desc">'+esc(e['Description']||'')+(e['Date']?' \u00b7 '+esc(e['Date']):'')+'</div></div>' +
+            '<div style="display:flex;align-items:center;gap:8px"><strong class="oh-item-amt">'+fmt(e['Total']||0)+'</strong>' +
+            '<button class="db" style="width:28px;height:28px;font-size:13px" onclick="deleteOH('+e['id']+')"> \u00d7</button></div>' +
+          '</div>';
+        }).join('') +
+      '</div>';
+    }).join('');
+  }
+
   $('fin-content').innerHTML =
-    '<div class="stat-grid" style="grid-template-columns:repeat(3,1fr);margin-bottom:20px">' +
-      '<div class="stat g"><div class="slbl">Total Revenue</div><div class="sval">'+fmt(tRev)+'</div></div>' +
-      '<div class="stat r"><div class="slbl">Total Expenses</div><div class="sval">'+fmt(tExp)+'</div></div>' +
-      '<div class="stat b"><div class="slbl">Net Profit</div><div class="sval">'+fmt(tRev-tExp)+'</div></div>' +
+    // Summary stats (4 cards)
+    '<div class="stat-grid" style="grid-template-columns:repeat(4,1fr);margin-bottom:20px">' +
+      '<div class="stat g"><div class="slbl">Revenue</div><div class="sval">'+fmt(tRev)+'</div></div>' +
+      '<div class="stat y"><div class="slbl">Job Costs</div><div class="sval">'+fmt(tProjExp)+'</div></div>' +
+      '<div class="stat r"><div class="slbl">Overhead</div><div class="sval">'+fmt(tOverhead)+'</div></div>' +
+      '<div class="stat b"><div class="slbl">Net Profit</div><div class="sval">'+fmt(tRev-tAllExp)+'</div></div>' +
     '</div>' +
-    (ks.length ? '<div class="tw" style="margin-bottom:20px"><table><thead><tr><th>Month</th><th>Jobs</th><th>Revenue</th><th>Collected</th><th>Expenses</th><th>Net Profit</th></tr></thead><tbody>'+tableRows+'</tbody></table></div>' : '') +
-    (ks.length ? '<div class="mob-cards" style="margin-bottom:20px">'+monthCards+'</div>' : '') +
-    (expHTML ? '<div class="exp-breakdown"><h3>Expenses by Type</h3>'+expHTML+'</div>' : '');
+    // Monthly table (desktop)
+    (ks.length ? '<div class="card" style="margin-bottom:20px"><div class="sh">Monthly Revenue</div><div class="tw"><table><thead><tr><th>Month</th><th>Jobs</th><th>Revenue</th><th>Collected</th><th>Costs</th><th>Net</th></tr></thead><tbody>'+tableRows+'</tbody></table></div></div>' : '') +
+    // Monthly cards (mobile)
+    (ks.length ? '<div class="mob-cards" style="margin-bottom:20px"><div class="sh" style="border:none;padding:0 0 12px">Monthly Revenue</div>'+monthCards+'</div>' : '') +
+    // Job expense breakdown
+    (expHTML ? '<div class="card" style="margin-bottom:20px"><div class="sh">Job Expenses by Type</div>'+expHTML+'</div>' : '') +
+    // Business / overhead expenses
+    '<div class="card"><div class="sh">Business Expenses <button class="btn btn-p sm" onclick="openOH()">+ Add Expense</button></div>' +
+    (ohHTML || '<p style="color:var(--muted);text-align:center;padding:24px">No business expenses yet \u2014 add gas, equipment, insurance, etc.</p>') +
+    '</div>';
 }
 
 function fmtMonth(ym){ var p=ym.split('-'); return MONTHS[parseInt(p[1])-1]+' '+p[0]; }
@@ -1477,6 +1522,49 @@ function duplicateQuote(id) {
   toast('\ud83d\udccb Duplicated from '+esc(q['Quote #']||'')+' \u2014 save to create new quote');
 }
 
+
+// ═══ BUSINESS / OVERHEAD EXPENSES ══════════════════════════════════════
+function openOH() {
+  $('oh-date').value = new Date().toISOString().slice(0,10);
+  $('oh-type').value = 'Gas / Fuel';
+  $('oh-desc').value = '';
+  $('oh-amt').value = '';
+  $('oh-bg').classList.add('open');
+}
+
+function closeOH() { $('oh-bg').classList.remove('open'); }
+
+async function saveOH() {
+  var amt = parseFloat($('oh-amt').value||0);
+  if (!amt) { toast('\u26a0\ufe0f Enter an amount'); return; }
+  var data = {
+    'Date': $('oh-date').value,
+    'Type': $('oh-type').value,
+    'Description': $('oh-desc').value.trim(),
+    'Total': amt,
+    'Unit Cost / Rate': amt,
+    'Qty / Hours': 1
+  };
+  try {
+    var res = await dbPost('Expenses', data);
+    var newE = Array.isArray(res) ? res[0] : (res||data);
+    OVERHEADS.unshift(newE);
+    closeOH();
+    toast('\u2705 Expense saved');
+    renderFinance();
+  } catch(e) { toast('\u274c '+e.message); }
+}
+
+async function deleteOH(id) {
+  if (!confirm('Delete this expense?')) return;
+  try {
+    await dbDel('Expenses', 'id=eq.'+id);
+    OVERHEADS = OVERHEADS.filter(function(e){ return e.id!==id; });
+    toast('Expense deleted');
+    renderFinance();
+  } catch(e) { toast('\u274c '+e.message); }
+}
+
 // ═══ STARTUP ═══════════════════════════════════════════════════════════
 if(sessionStorage.getItem('blw')==='1'){
   document.getElementById('login').style.display='none';
@@ -1632,6 +1720,36 @@ function doSendEmail() {
       <button class="btn btn-o sm" onclick="closeDayPanel()">Close</button>
     </div>
     <div id="day-panel-body"></div>
+  </div>
+</div>
+
+
+<!-- ── ADD BUSINESS EXPENSE MODAL ────────────────────────────────── -->
+<div id="oh-bg" style="position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:600;display:none;align-items:flex-end;justify-content:center;backdrop-filter:blur(3px)" onclick="if(event.target===this)closeOH()">
+  <div style="background:#0d1e38;border-radius:20px 20px 0 0;border:1px solid rgba(255,255,255,.14);width:100%;max-width:480px;padding:24px 20px 36px">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid rgba(255,255,255,.08)">
+      <h3 style="font-size:17px;font-weight:700;color:#fff">Add Business Expense</h3>
+    </div>
+    <div class="fld" style="margin-bottom:12px"><label>Date</label><input id="oh-date" type="date"></div>
+    <div class="fld" style="margin-bottom:12px"><label>Type</label>
+      <select id="oh-type">
+        <option>Gas / Fuel</option>
+        <option>Equipment</option>
+        <option>Insurance</option>
+        <option>Marketing</option>
+        <option>Supplies</option>
+        <option>Vehicle Maintenance</option>
+        <option>Software / Subscriptions</option>
+        <option>Phone / Internet</option>
+        <option>Other</option>
+      </select>
+    </div>
+    <div class="fld" style="margin-bottom:12px"><label>Description</label><input id="oh-desc" placeholder="What was this for?"></div>
+    <div class="fld" style="margin-bottom:16px"><label>Amount ($)</label><input id="oh-amt" type="number" min="0" step="0.01" placeholder="0.00"></div>
+    <div style="display:flex;gap:10px">
+      <button class="sbtn sms" onclick="saveOH()" style="flex:1;min-height:50px">Save Expense</button>
+      <button class="sbtn cancel" onclick="closeOH()" style="min-height:50px">Cancel</button>
+    </div>
   </div>
 </div>
 
