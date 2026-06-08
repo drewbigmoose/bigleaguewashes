@@ -653,7 +653,7 @@ details.exp-type summary:hover{background:rgba(255,255,255,.03)}
 <div id="clients-cards" class="mob-cards"></div>
 </div>
 <div id="screen-schedule" class="screen">
-<div class="topbar"><div><h1>Schedule</h1><p>Monthly calendar view</p></div><button class="btn btn-p" onclick="exportICS()">&#128197; Export .ics</button></div>
+<div class="topbar"><div><h1>Schedule</h1><p>Monthly calendar view</p></div><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn btn-p" onclick="subscribeCal()">&#128279; Subscribe</button><button class="btn btn-o sm" onclick="exportICS()">&#11015; Download</button></div></div>
 <div class="cal-nav">
 <button onclick="calPrev()">&#9664; Prev</button>
 <div class="cal-ttl" id="cal-ttl">&mdash;</div>
@@ -1606,6 +1606,61 @@ async function deleteOH(id) {
   } catch(e) { toast('\u274c '+e.message); }
 }
 
+
+
+// ═══ CALENDAR SUBSCRIBE (LIVE FEED) ════════════════════════════════════
+var CAL_FEED = 'https://ixoibfcvlyycjuemnvlj.supabase.co/functions/v1/calendar-feed';
+var CAL_WEBCAL = 'webcal://ixoibfcvlyycjuemnvlj.supabase.co/functions/v1/calendar-feed';
+
+function subscribeCal() {
+  // On iOS/Mac, webcal:// triggers native calendar subscription
+  var isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+  var isMac = /Mac/i.test(navigator.userAgent);
+  
+  if (isMobile || isMac) {
+    window.open(CAL_WEBCAL, '_blank');
+    toast('\ud83d\udcc5 Opening calendar subscription\u2026');
+  } else {
+    // Desktop: show the URL to copy
+    showFeedURL();
+  }
+}
+
+function showFeedURL() {
+  var el = $('feed-url-panel');
+  if (el) { el.classList.toggle('open'); return; }
+  // Create inline panel below the button
+  var panel = document.createElement('div');
+  panel.id = 'feed-url-panel';
+  panel.className = 'card open';
+  panel.style.cssText = 'margin-bottom:16px';
+  panel.innerHTML =
+    '<div class="sh">\ud83d\udd17 Calendar Feed URL</div>'+
+    '<p style="font-size:13px;color:var(--muted2);margin-bottom:12px">Copy this URL and paste into your calendar app (Google Calendar \u2192 Other calendars \u2192 From URL, or Apple Calendar \u2192 File \u2192 New Subscription)</p>'+
+    '<div style="display:flex;gap:8px;align-items:center">'+
+      '<input id="feed-url-input" value="'+CAL_FEED+'" readonly style="flex:1;min-height:44px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.14);border-radius:9px;color:var(--white);padding:8px 12px;font-size:13px;font-family:monospace;outline:none">'+
+      '<button class="btn btn-p" onclick="copyFeedURL()" style="white-space:nowrap">Copy</button>'+
+    '</div>'+
+    '<div style="display:flex;gap:8px;margin-top:12px">'+
+      '<button class="btn btn-o sm" onclick="window.open(CAL_WEBCAL,\'_blank\')">Open in Calendar App</button>'+
+      '<button class="btn btn-o sm" onclick="window.open(\'https://calendar.google.com/calendar/r?cid=\'+encodeURIComponent(CAL_FEED),\'_blank\')">Add to Google Calendar</button>'+
+    '</div>';
+  var calNav = document.querySelector('#screen-schedule .cal-nav');
+  if (calNav) calNav.parentNode.insertBefore(panel, calNav);
+}
+
+function copyFeedURL() {
+  var input = $('feed-url-input');
+  if (input) {
+    navigator.clipboard.writeText(CAL_FEED).then(function() {
+      toast('\ud83d\udccb URL copied to clipboard!');
+    }).catch(function() {
+      input.select();
+      document.execCommand('copy');
+      toast('\ud83d\udccb URL copied!');
+    });
+  }
+}
 
 // ═══ ICS CALENDAR EXPORT ═══════════════════════════════════════════════
 function exportICS() {
