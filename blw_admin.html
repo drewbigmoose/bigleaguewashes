@@ -489,6 +489,14 @@ details.exp-type summary:hover{background:rgba(255,255,255,.03)}
 @media(max-width:768px){
   .stat-grid[style*="repeat(4"]{grid-template-columns:1fr 1fr!important}
 }
+
+/* ── INLINE EXPENSE ROW SELECTS ───────────────────── */
+.oh-tp{min-height:44px;background:rgba(255,255,255,.07)!important;border:1px solid rgba(255,255,255,.14)!important;border-radius:9px!important;color:var(--white)!important;padding:8px 14px!important;font-size:14px!important;outline:none;flex:1;font-family:inherit}
+.oh-tp:focus{border-color:var(--blue)!important}
+.oh-tp option{background:#1a2e50}
+@media(max-width:768px){
+  .oh-tp{font-size:16px!important;min-height:48px}
+}
 </style>
 </head>
 <body>
@@ -1131,8 +1139,9 @@ function renderFinance() {
     // Job expense breakdown
     (expHTML ? '<div class="card" style="margin-bottom:20px"><div class="sh">Job Expenses by Type</div>'+expHTML+'</div>' : '') +
     // Business / overhead expenses
-    '<div class="card"><div class="sh">Business Expenses <button class="btn btn-p sm" onclick="openOH()">+ Add Expense</button></div>' +
-    (ohHTML || '<p style="color:var(--muted);text-align:center;padding:24px">No business expenses yet \u2014 add gas, equipment, insurance, etc.</p>') +
+    '<div class="card"><div class="sh">Business Expenses <button class="btn btn-p sm" onclick="addOHRow()">+ Add Line</button></div>' +
+    '<div id="oh-new-rows"></div>' +
+    (ohHTML || (OVERHEADS.length ? '' : '<p style="color:var(--muted);text-align:center;padding:24px">No business expenses yet \u2014 tap + Add Line above</p>')) +
     '</div>';
 }
 
@@ -1524,36 +1533,68 @@ function duplicateQuote(id) {
 
 
 // ═══ BUSINESS / OVERHEAD EXPENSES ══════════════════════════════════════
-function openOH() {
-  $('oh-date').value = new Date().toISOString().slice(0,10);
-  $('oh-type').value = 'Gas / Fuel';
-  $('oh-desc').value = '';
-  $('oh-amt').value = '';
-  $('oh-bg').classList.add('open');
+var _ohi = 0;
+function addOHRow() {
+  var c = $('oh-new-rows'); if(!c) return;
+  var i = _ohi++;
+  var d = document.createElement('div');
+  d.className = 'svc-card'; d.id = 'ohr-'+i;
+  d.innerHTML =
+    '<div class="sc-top">' +
+      '<select class="oh-tp">' +
+        '<option>Gas / Fuel</option><option>Equipment</option><option>Insurance</option>' +
+        '<option>Marketing</option><option>Supplies</option><option>Vehicle Maintenance</option>' +
+        '<option>Software</option><option>Phone / Internet</option><option>Other</option>' +
+      '</select>' +
+      '<button class="db" onclick="document.getElementById(\'ohr-'+i+'\').remove()">\u00d7</button>' +
+    '</div>' +
+    '<div class="sc-dim" style="margin-bottom:10px"><label>Description</label><input class="oh-dc" placeholder="What was this for?"></div>' +
+    '<div class="sc-dims" style="grid-template-columns:1fr 1fr 1fr;margin-bottom:8px">' +
+      '<div class="sc-dim"><label>Date</label><input class="oh-dt" type="date" value="'+new Date().toISOString().slice(0,10)+'"></div>' +
+      '<div class="sc-dim"><label>Qty / Hours</label><input class="oh-qt" type="number" min="0" value="1" oninput="calcOHRow('+i+')"></div>' +
+      '<div class="sc-dim"><label>Unit Cost ($)</label><input class="oh-ct" type="number" min="0" step="0.01" placeholder="0.00" oninput="calcOHRow('+i+')"></div>' +
+    '</div>' +
+    '<div class="sc-foot">' +
+      '<span class="sc-lbl" id="oh-tot-'+i+'"></span>' +
+      '<button class="btn btn-p sm" onclick="saveOHRow('+i+')" style="min-height:40px">\ud83d\udcbe Save</button>' +
+    '</div>';
+  c.appendChild(d);
+  setTimeout(function(){ d.querySelector('.oh-dc').focus(); }, 50);
 }
 
-function closeOH() { $('oh-bg').classList.remove('open'); }
+function calcOHRow(i) {
+  var d = document.getElementById('ohr-'+i); if(!d) return;
+  var q = parseFloat(d.querySelector('.oh-qt').value)||0;
+  var c = parseFloat(d.querySelector('.oh-ct').value)||0;
+  var t = q*c;
+  var el = $('oh-tot-'+i);
+  if(el) el.textContent = t ? fmt(t) : '';
+}
 
-async function saveOH() {
-  var amt = parseFloat($('oh-amt').value||0);
-  if (!amt) { toast('\u26a0\ufe0f Enter an amount'); return; }
+async function saveOHRow(i) {
+  var d = document.getElementById('ohr-'+i); if(!d) return;
+  var qty = parseFloat(d.querySelector('.oh-qt').value)||1;
+  var cost = parseFloat(d.querySelector('.oh-ct').value)||0;
+  if(!cost){ toast('\u26a0\ufe0f Enter a unit cost'); return; }
   var data = {
-    'Date': $('oh-date').value,
-    'Type': $('oh-type').value,
-    'Description': $('oh-desc').value.trim(),
-    'Total': amt,
-    'Unit Cost / Rate': amt,
-    'Qty / Hours': 1
+    'Date': d.querySelector('.oh-dt').value,
+    'Type': d.querySelector('.oh-tp').value,
+    'Description': d.querySelector('.oh-dc').value.trim(),
+    'Qty / Hours': qty,
+    'Unit Cost / Rate': cost,
+    'Total': qty * cost
   };
   try {
     var res = await dbPost('Expenses', data);
     var newE = Array.isArray(res) ? res[0] : (res||data);
     OVERHEADS.unshift(newE);
-    closeOH();
+    d.remove();
     toast('\u2705 Expense saved');
     renderFinance();
   } catch(e) { toast('\u274c '+e.message); }
 }
+
+function closeOH() { var bg=$('oh-bg'); if(bg) bg.classList.remove('open'); }
 
 async function deleteOH(id) {
   if (!confirm('Delete this expense?')) return;
