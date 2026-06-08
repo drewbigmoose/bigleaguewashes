@@ -451,6 +451,30 @@ details.exp-type summary:hover{background:rgba(255,255,255,.03)}
   #main{-webkit-overflow-scrolling:touch}
 }
 
+
+/* ═══ SERVICE CARDS ════════════════════════════════════════════════════ */
+.shdr{display:none}
+.svc-card{background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:10px;transition:border-color .15s}
+.svc-card:hover{border-color:var(--border2)}
+.sc-top{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:12px}
+.sc-top select{flex:1;min-height:44px;font-size:14px;background:rgba(255,255,255,.07);border:1px solid var(--border2);border-radius:9px;color:var(--white);padding:8px 14px;outline:none}
+.sc-top select:focus{border-color:var(--blue)}
+.sc-top select option{background:#1a2e50}
+.sc-body{}
+.sc-dims{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.sc-dim{display:flex;flex-direction:column;gap:4px}
+.sc-dim label{font-size:11px;font-weight:600;color:var(--muted2);text-transform:uppercase;letter-spacing:.4px}
+.sc-dim input{min-height:44px;background:rgba(255,255,255,.07);border:1px solid var(--border2);border-radius:8px;color:var(--white);font-size:16px;padding:8px 12px;outline:none;width:100%}
+.sc-dim input:focus{border-color:var(--blue);background:rgba(26,108,246,.08)}
+.sc-dim input::placeholder{color:var(--muted)}
+.sc-info{font-size:12px;color:var(--muted2);margin-top:8px;font-weight:500;font-style:italic}
+.sc-checks{display:flex;gap:14px;flex-wrap:wrap}
+.sc-chk{display:flex;align-items:center;gap:7px;font-size:13px;color:var(--text);cursor:pointer;padding:6px 0;min-height:36px}
+.sc-chk input[type="checkbox"]{width:20px;height:20px;accent-color:var(--blue);cursor:pointer}
+.sc-foot{display:flex;justify-content:space-between;align-items:center;padding-top:10px;border-top:1px solid var(--border);margin-top:12px;min-height:28px}
+.sc-lbl{font-size:13px;color:var(--muted2)}
+.sc-tot{font-size:17px;font-weight:800;color:var(--blue-lt)}
+
 </style>
 </head>
 <body>
@@ -660,15 +684,15 @@ var H = {'apikey':KEY,'Authorization':'Bearer '+KEY,'Content-Type':'application/
 
 // ═══ SERVICE PRESETS ═══════════════════════════════════════════════════
 var SVCS = [
-  {n:'House Soft Wash',r:0.305,u:'sqft'},
-  {n:'Driveway',r:0.08,u:'sqft'},
-  {n:'Sidewalk/Walkway',r:0.08,u:'sqft'},
-  {n:'Patio / Deck',r:0.10,u:'sqft'},
-  {n:'Pool Deck',r:0.10,u:'sqft'},
-  {n:'Fence',r:0.08,u:'sqft'},
-  {n:'Junk Removal',r:25,u:'items'},
-  {n:'Window Cleaning',r:8,u:'windows'},
-  {n:'Custom / Flat Rate',r:0,u:'flat'}
+  {n:'Driveway Cleaning',  r:0.30, type:'lw', unit:'sqft', lbl:'Length \xd7 Width \xd7 $0.30'},
+  {n:'Walkway Cleaning',   r:0.30, type:'lw', unit:'sqft', lbl:'Length \xd7 Width \xd7 $0.30'},
+  {n:'Patio Cleaning',     r:0.30, type:'lw', unit:'sqft', lbl:'Length \xd7 Width \xd7 $0.30'},
+  {n:'House Soft Wash',    r:0.25, type:'qty',unit:'sqft', lbl:'House Square Feet'},
+  {n:'Fence Cleaning',     r:1.75, type:'qty',unit:'lf',   lbl:'Linear Feet'},
+  {n:'Car Detailing',      r:20,   type:'car',unit:'each', lbl:'Vehicles'},
+  {n:'Garbage Bin Cleaning',r:20,  type:'qty',unit:'each', lbl:'Bins'},
+  {n:'Junk Removal',       r:75,   type:'qty',unit:'cy',   lbl:'Cubic Yards'},
+  {n:'Custom / Flat Rate', r:0,    type:'qty',unit:'flat', lbl:'Qty'}
 ];
 
 // ═══ STATE ═════════════════════════════════════════════════════════════
@@ -1114,25 +1138,69 @@ function initNewQuote() {
 
 function addSvc(d) {
   var i=_si++;
-  var opts=SVCS.map(function(s){ return '<option value="'+esc(s.n)+'" data-r="'+s.r+'">'+(s.n||'Custom')+'</option>'; }).join('');
-  var row=document.createElement('div'); row.className='sr'; row.id='sr'+i;
-  row.innerHTML='<select class="svc-t" onchange="onSvcChange(\''+i+'\')">' +
-    '<option value="">&#8212; Select Service &#8212;</option>'+opts+'</select>' +
-    '<input class="svc-q" type="number" min="0" step="1" placeholder="0" oninput="calcTotals()">' +
-    '<input class="svc-r" type="number" min="0" step="0.01" placeholder="0.00" oninput="calcTotals()">' +
-    '<span class="svc-tot">$0.00</span>' +
-    '<button class="db" onclick="document.getElementById(\'sr'+i+'\').remove();calcTotals()">×</button>';
-  $('svc-rows').appendChild(row);
-  if(d){ row.querySelector('.svc-t').value=d.name||d.n||''; row.querySelector('.svc-q').value=d.qty||d.q||0; row.querySelector('.svc-r').value=d.rate||d.r||0; }
-  calcTotals();
+  var opts=SVCS.map(function(s){ return '<option value="'+esc(s.n)+'" data-r="'+s.r+'" data-type="'+s.type+'" data-unit="'+s.unit+'" data-lbl="'+s.lbl+'">'+s.n+'</option>'; }).join('');
+  var div=document.createElement('div'); div.className='svc-card'; div.id='sr'+i;
+  div.innerHTML=
+    '<div class="sc-top">'+
+      '<select class="svc-t" onchange="onSvcChg('+i+')"><option value="">\u2014 Select Service \u2014</option>'+opts+'</select>'+
+      '<button class="db" onclick="document.getElementById(\'sr'+i+'\').remove();calcTotals()">\u00d7</button>'+
+    '</div>'+
+    '<div class="sc-body" id="scb-'+i+'"></div>'+
+    '<div class="sc-foot" id="scf-'+i+'"></div>';
+  $('svc-rows').appendChild(div);
+
+  if(d && (d.name||d.n)){
+    div.querySelector('.svc-t').value=d.name||d.n||'';
+    onSvcChg(i);
+    // Fill values based on type
+    var svcObj=SVCS.find(function(x){return x.n===(d.name||d.n);});
+    var tp=(svcObj&&svcObj.type)||'qty';
+    if(tp==='lw'){
+      var ln=div.querySelector('.sc-len'),wd=div.querySelector('.sc-wid');
+      if(ln) ln.value=d.length||d.qty||0;
+      if(wd) wd.value=d.width||0;
+    } else if(tp==='car'){
+      var qq=div.querySelector('.sc-qty'); if(qq) qq.value=d.qty||d.q||0;
+      var wc=div.querySelector('.sc-wash'),vc=div.querySelector('.sc-vacuum'),ic=div.querySelector('.sc-interior');
+      if(wc) wc.checked=d.wash!==false;
+      if(vc) vc.checked=d.vacuum!==false;
+      if(ic) ic.checked=d.interior!==false;
+    } else {
+      var qq=div.querySelector('.sc-qty'); if(qq) qq.value=d.qty||d.q||0;
+    }
+    calcTotals();
+  }
 }
 
-function onSvcChange(i) {
-  var row=document.getElementById('sr'+i); if(!row) return;
-  var sel=row.querySelector('.svc-t');
-  var opt=sel.options[sel.selectedIndex];
+function onSvcChg(i) {
+  var div=document.getElementById('sr'+i); if(!div) return;
+  var sel=div.querySelector('.svc-t'), opt=sel.options[sel.selectedIndex];
+  var tp=opt.getAttribute('data-type')||'qty';
   var r=parseFloat(opt.getAttribute('data-r')||0);
-  row.querySelector('.svc-r').value=r||'';
+  var lbl=opt.getAttribute('data-lbl')||'Qty';
+  var unit=opt.getAttribute('data-unit')||'';
+  var body=$('scb-'+i);
+
+  if(tp==='lw'){
+    body.innerHTML=
+      '<div class="sc-dims">'+
+        '<div class="sc-dim"><label>Length (ft)</label><input class="sc-len" type="number" min="0" step="0.1" placeholder="0" oninput="calcTotals()"></div>'+
+        '<div class="sc-dim"><label>Width (ft)</label><input class="sc-wid" type="number" min="0" step="0.1" placeholder="0" oninput="calcTotals()"></div>'+
+      '</div>'+
+      '<div class="sc-info">Area \xd7 $'+r.toFixed(2)+'/sqft</div>';
+  } else if(tp==='car'){
+    body.innerHTML=
+      '<div class="sc-dim" style="margin-bottom:10px"><label>Vehicles</label><input class="sc-qty" type="number" min="0" placeholder="0" oninput="calcTotals()"></div>'+
+      '<div class="sc-checks">'+
+        '<label class="sc-chk"><input type="checkbox" class="sc-wash" checked onchange="calcTotals()"> Wash ($20)</label>'+
+        '<label class="sc-chk"><input type="checkbox" class="sc-vacuum" checked onchange="calcTotals()"> Vacuum ($20)</label>'+
+        '<label class="sc-chk"><input type="checkbox" class="sc-interior" checked onchange="calcTotals()"> Interior ($20)</label>'+
+      '</div>';
+  } else {
+    body.innerHTML=
+      '<div class="sc-dim"><label>'+lbl+'</label><input class="sc-qty" type="number" min="0" step="0.1" placeholder="0" oninput="calcTotals()"></div>'+
+      (r>0?'<div class="sc-info">\xd7 $'+r.toFixed(2)+'/'+unit+'</div>':'<div class="sc-dim" style="margin-top:8px"><label>Price ($)</label><input class="sc-rate" type="number" min="0" step="0.01" placeholder="0.00" oninput="calcTotals()"></div>');
+  }
   calcTotals();
 }
 
@@ -1152,11 +1220,34 @@ function addExp(d) {
 
 function calcTotals() {
   var svc=0;
-  document.querySelectorAll('#svc-rows .sr').forEach(function(r){
-    var q=parseFloat(r.querySelector('.svc-q').value)||0;
-    var rt=parseFloat(r.querySelector('.svc-r').value)||0;
-    var t=q*rt; svc+=t;
-    r.querySelector('.svc-tot').textContent=fmt(t);
+  document.querySelectorAll('#svc-rows .svc-card').forEach(function(div){
+    var sel=div.querySelector('.svc-t'); if(!sel||!sel.value) return;
+    var opt=sel.options[sel.selectedIndex];
+    var tp=opt.getAttribute('data-type')||'qty';
+    var r=parseFloat(opt.getAttribute('data-r')||0);
+    var t=0, label='';
+
+    if(tp==='lw'){
+      var ln=parseFloat(div.querySelector('.sc-len')?.value||0);
+      var wd=parseFloat(div.querySelector('.sc-wid')?.value||0);
+      var area=ln*wd; t=area*r;
+      label=(ln&&wd)?Math.round(area).toLocaleString()+' sqft':'';
+    } else if(tp==='car'){
+      var qty=parseFloat(div.querySelector('.sc-qty')?.value||0);
+      var pv=0;
+      if(div.querySelector('.sc-wash')?.checked) pv+=20;
+      if(div.querySelector('.sc-vacuum')?.checked) pv+=20;
+      if(div.querySelector('.sc-interior')?.checked) pv+=20;
+      t=qty*pv;
+      label=qty?qty+' vehicle'+(qty!==1?'s':'')+' \xd7 $'+pv:'';
+    } else {
+      var qty=parseFloat(div.querySelector('.sc-qty')?.value||0);
+      var cr=parseFloat(div.querySelector('.sc-rate')?.value||r);
+      t=qty*cr;
+    }
+    svc+=t;
+    var foot=div.querySelector('.sc-foot')||div.querySelector('[id^="scf-"]');
+    if(foot) foot.innerHTML=(label?'<span class="sc-lbl">'+label+'</span>':'')+(t?'<span class="sc-tot">'+fmt(t)+'</span>':'');
   });
   var exp=0;
   document.querySelectorAll('#exp-rows .sr').forEach(function(r){
@@ -1175,12 +1266,30 @@ async function saveQuote() {
   if(!first && !last){ toast('⚠️ Please enter a client name'); return; }
 
   var svcs=[], svcTotal=0;
-  document.querySelectorAll('#svc-rows .sr').forEach(function(r){
-    var n=r.querySelector('.svc-t').value;
-    var q=parseFloat(r.querySelector('.svc-q').value)||0;
-    var rt=parseFloat(r.querySelector('.svc-r').value)||0;
-    var t=q*rt;
-    if(n||q||rt){ svcs.push({name:n,qty:q,rate:rt,total:t}); svcTotal+=t; }
+  document.querySelectorAll('#svc-rows .svc-card').forEach(function(div){
+    var sel=div.querySelector('.svc-t'); if(!sel||!sel.value) return;
+    var opt=sel.options[sel.selectedIndex];
+    var tp=opt.getAttribute('data-type')||'qty';
+    var r=parseFloat(opt.getAttribute('data-r')||0);
+    var s={name:sel.value,type:tp,rate:r};
+
+    if(tp==='lw'){
+      s.length=parseFloat(div.querySelector('.sc-len')?.value||0);
+      s.width=parseFloat(div.querySelector('.sc-wid')?.value||0);
+      s.qty=s.length*s.width; s.total=s.qty*r;
+    } else if(tp==='car'){
+      s.qty=parseFloat(div.querySelector('.sc-qty')?.value||0);
+      s.wash=!!div.querySelector('.sc-wash')?.checked;
+      s.vacuum=!!div.querySelector('.sc-vacuum')?.checked;
+      s.interior=!!div.querySelector('.sc-interior')?.checked;
+      var pv=(s.wash?20:0)+(s.vacuum?20:0)+(s.interior?20:0);
+      s.rate=pv; s.total=s.qty*pv;
+    } else {
+      s.qty=parseFloat(div.querySelector('.sc-qty')?.value||0);
+      var cr=parseFloat(div.querySelector('.sc-rate')?.value||r);
+      s.rate=cr; s.total=s.qty*cr;
+    }
+    if(s.name||s.total){ svcs.push(s); svcTotal+=s.total; }
   });
 
   var exps=[], expTotal=0;
